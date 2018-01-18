@@ -11,7 +11,23 @@ class Visualization {
 
   initialize() {
     this.initializeElement();
-    this.initializeAudio();
+    this.initializeAudio().then(
+      ({ audioContext, audioBuffer }) => {
+        console.log(audioContext, audioBuffer);
+
+        const audioAnalyser = audioContext.createAnalyser();
+        audioAnalyser.fftSize = fftSize;
+        audioAnalyser.minDecibels = -100;
+        audioAnalyser.maxDecibels = -30;
+        audioAnalyser.smoothingTimeConstant = 0.8;
+      },
+      (error) => {
+        if (error === "Audio unsupported") {
+          //this.showAudioUnsupportedError();
+        } else {
+          //this.showError(error);
+        }
+      });
   }
 
   resize() {
@@ -113,44 +129,37 @@ class Visualization {
   }
 
   initializeAudio() {
-    if (!AudioContext) {
-      this.showAudioUnsupportedElement();
-      return Promise.reject("Audio unsupported");
-    } else {
+    return new Promise((resolve, reject) => {
+      if (AudioContext) {
+        //this.showLoadingText("Loading Audio Buffer");
 
-      this.showLoadingElement();
-      this.updateLoadingText("Loading Audio Buffer");
+        const request = new XMLHttpRequest();
+        request.open("GET", audioUrl, true);
+        request.responseType = "arraybuffer";
 
-      return new Promise((resolve, reject) => {
-        const xmlHttpRequest = new XMLHttpRequest();
-
-        xmlHttpRequest.open("GET", audioUrl, true);
-        xmlHttpRequest.responseType = "arraybuffer";
-
-        xmlHttpRequest.onerror = (event) => reject(event.error);
-        xmlHttpRequest.onload = (event) => {
-          this.updateLoadingText("Decoding Audio Data");
+        request.onload = (event) => {
+          //this.showLoadingText("Decoding Audio Data");
 
           const audioContext = new AudioContext();
-          const audioAnalyser = audioContext.createAnalyser();
+          audioContext.decodeAudioData(request.response, (audioBuffer) => {
+            //this.showLoadingText("Ready");
 
-          audioAnalyser.fftSize = fftSize;
-          audioAnalyser.minDecibels = -100;
-          audioAnalyser.maxDecibels = -30;
-          audioAnalyser.smoothingTimeConstant = 0.8;
-
-          audioAnalyser.context.decodeAudioData(xmlHttpRequest.response, (data) => {
-            this.updateLoadingText("Ready");
-
-            resolve(data);
+            resolve({ audioContext, audioBuffer });
           }, (error) => {
             reject(error);
           });
         };
 
-        xmlHttpRequest.send();
-      });
-    }
+        request.onerror = (event) => {
+          reject(event.error);
+        };
+
+        request.send();
+      } else {
+        reject("Audio unsupported");
+      }
+    });
+
   }
 }
 

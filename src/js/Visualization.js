@@ -1,17 +1,18 @@
 import Star from "./Star.js";
 
-const audioUrl = "ogg/new_year_dubstep_minimix.ogg";
 const fftSize = 1024;
 
 class Visualization {
-  constructor(elementId) {
-    console.log("Visualization.constructor", { elementId });
-    this.elementId = elementId;
+  constructor(elementOrId) {
+    console.log("Visualization.constructor", { elementOrId });
+
+    this.elementOrId = elementOrId;
+    this.element = null;
   }
 
-  initialize() {
+  load(url) {
     this.initializeElement();
-    this.initializeAudio().then(
+    this.initializeAudio(url).then(
       ({ canvasContext, audioContext, audioBuffer }) => {
         console.log({ canvasContext, audioContext, audioBuffer });
 
@@ -27,27 +28,38 @@ class Visualization {
         if (error.message === "Audio unsupported.") {
           this.showError("Audio Unsupported", "Sorry! This visualization requires the <a href=\"http://caniuse.com/#feat=audio-api\" target=\"_blank\">Web Audio API</a>.");
         } else {
-          this.showError("Error Occurred", "Oops! An unexpected error occurred. Please <a href=\"javascript:document.location.reload(true);\">try again</a>.");
+          this.showError("Error Occurred", "Oops! An unexpected error occurred. Please <a href=\"javascript:window.location.reload(true);\">try again</a>.");
         }
       });
   }
 
-  resize() {
-  }
-
   initializeElement() {
-    this.element = document.getElementById(this.elementId);
-    this.element.classList.add("visualization");
-    this.element.innerHTML = "";
+    if (!this.element) {
+      if (typeof this.elementOrId === "string") {
+        this.element = document.getElementById(this.elementOrId);
+      } else {
+        this.element = this.elementOrId;
+      }
+    }
 
-    const loadingElement = this.createLoadingElement();
-    this.element.appendChild(loadingElement);
-
-    const errorElement = this.createErrorElement();
-    this.element.appendChild(errorElement);
+    const element = this.element;
+    element.classList.add("visualization");
+    element.innerHTML = "";
 
     const canvasElement = this.createCanvasElement();
-    this.element.appendChild(canvasElement);
+    element.appendChild(canvasElement);
+
+    const loadingElement = this.createLoadingElement();
+    element.appendChild(loadingElement);
+
+    const errorElement = this.createErrorElement();
+    element.appendChild(errorElement);
+  }
+
+  createCanvasElement() {
+    const canvasElement = document.createElement("canvas");
+
+    return canvasElement;
   }
 
   createLoadingElement() {
@@ -116,23 +128,6 @@ class Visualization {
     this.showErrorElement();
   }
 
-  createCanvasElement() {
-    const canvasElement = document.createElement("canvas");
-    canvasElement.className = "hidden";
-
-    return canvasElement;
-  }
-
-  showCanvasElement() {
-    const canvasElement = this.element.querySelector("canvas");
-    canvasElement.classList.add("hidden");
-  }
-
-  hideCanvasElement() {
-    const canvasElement = this.element.querySelector("canvas");
-    canvasElement.classList.remove("hidden");
-  }
-
   getCanvasContext() {
     const canvasElement = this.element.querySelector("canvas");
     return canvasElement.getContext("2d");
@@ -140,13 +135,13 @@ class Visualization {
 
   createAudioContext() {
     if (window.AudioContext) {
-      return new AudioContext();
+      return new window.AudioContext();
     } else {
       throw new Error("Audio unsupported.");
     }
   }
 
-  initializeAudio() {
+  initializeAudio(url) {
     return new Promise((resolve, reject) => {
       this.showLoadingDescription("Loading Audio Buffer");
 
@@ -155,7 +150,7 @@ class Visualization {
       const request = new XMLHttpRequest();
 
       request.responseType = "arraybuffer";
-      request.open("GET", audioUrl, true);
+      request.open("GET", url, true);
 
       request.onload = (event) => {
         this.showLoadingDescription("Decoding Audio Data");

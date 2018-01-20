@@ -13,10 +13,6 @@ canvas {
   height: 100%;
 }
 
-canvas.hidden {
-  display: none;
-}
-
 .visualization {
   position: relative;
   font-size: 14px;

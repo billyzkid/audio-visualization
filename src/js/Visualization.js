@@ -12,8 +12,8 @@ class Visualization {
   initialize() {
     this.initializeElement();
     this.initializeAudio().then(
-      ({ audioContext, audioBuffer }) => {
-        console.log(audioContext, audioBuffer);
+      ({ canvasContext, audioContext, audioBuffer }) => {
+        console.log({ canvasContext, audioContext, audioBuffer });
 
         const audioAnalyser = audioContext.createAnalyser();
         audioAnalyser.fftSize = fftSize;
@@ -22,10 +22,12 @@ class Visualization {
         audioAnalyser.smoothingTimeConstant = 0.8;
       },
       (error) => {
-        if (error === "Audio unsupported") {
-          //this.showAudioUnsupportedError();
+        console.error(error);
+
+        if (error.message === "Audio unsupported.") {
+          this.showError("Audio Unsupported", "Sorry! This visualization requires the <a href=\"http://caniuse.com/#feat=audio-api\" target=\"_blank\">Web Audio API</a>.");
         } else {
-          //this.showError(error);
+          this.showError("Error Occurred", "Oops! An unexpected error occurred. Please <a href=\"javascript:document.location.reload(true);\">try again</a>.");
         }
       });
   }
@@ -34,132 +36,145 @@ class Visualization {
   }
 
   initializeElement() {
-    const element = document.getElementById(this.elementId);
-    element.setAttribute("class", "visualization");
-    element.innerHTML = "";
+    this.element = document.getElementById(this.elementId);
+    this.element.classList.add("visualization");
+    this.element.innerHTML = "";
 
     const loadingElement = this.createLoadingElement();
-    element.appendChild(loadingElement);
+    this.element.appendChild(loadingElement);
 
-    const audioUnsupportedElement = this.createAudioUnsupportedElement();
-    element.appendChild(audioUnsupportedElement);
+    const errorElement = this.createErrorElement();
+    this.element.appendChild(errorElement);
 
     const canvasElement = this.createCanvasElement();
-    element.appendChild(canvasElement);
-
-    this.canvasContext = canvasElement.getContext("2d");
-    this.element = element;
+    this.element.appendChild(canvasElement);
   }
 
   createLoadingElement() {
-    const element = document.createElement("div");
-    element.setAttribute("class", "loading hidden");
+    const loadingElement = document.createElement("div");
+    loadingElement.className = "loading hidden";
 
-    const childElement1 = document.createElement("h1");
-    childElement1.innerHTML = "Loading&hellip;";
-    element.appendChild(childElement1);
+    const titleElement = document.createElement("h1");
+    titleElement.innerHTML = "Loading&hellip;";
+    loadingElement.appendChild(titleElement);
 
-    const childElement2 = document.createElement("p");
-    element.appendChild(childElement2);
+    const descriptionElement = document.createElement("p");
+    loadingElement.appendChild(descriptionElement);
 
-    return element;
-  }
-
-  showLoadingElement() {
-    const element = this.element.querySelector(".loading");
-    element.setAttribute("class", "loading");
+    return loadingElement;
   }
 
   hideLoadingElement() {
-    const element = this.element.querySelector(".loading");
-    element.setAttribute("class", "loading hidden");
+    const loadingElement = this.element.querySelector(".loading");
+    loadingElement.classList.add("hidden");
   }
 
-  updateLoadingText(text) {
-    const element = this.element.querySelector(".loading>p");
-    element.innerHTML = `&ndash; ${text} &ndash;`;
+  showLoadingElement() {
+    const loadingElement = this.element.querySelector(".loading");
+    loadingElement.classList.remove("hidden");
   }
 
-  createAudioUnsupportedElement() {
-    const element = document.createElement("div");
-    element.setAttribute("class", "audio-unsupported hidden");
+  showLoadingDescription(description) {
+    const descriptionElement = this.element.querySelector(".loading>p");
+    descriptionElement.innerHTML = `&ndash; ${description} &ndash;`;
 
-    const childElement1 = document.createElement("h1");
-    childElement1.innerHTML = "Audio Unsupported";
-    element.appendChild(childElement1);
-
-    const childElement2 = document.createElement("p");
-    childElement2.innerHTML = "Sorry, this visualization requires the Web Audio API.";
-    element.appendChild(childElement2);
-
-    const childElement3 = document.createElement("a");
-    childElement3.setAttribute("href", "http://caniuse.com/#feat=audio-api");
-    childElement3.setAttribute("target", "_blank");
-    childElement3.innerHTML = "Browser Support";
-    element.appendChild(childElement3);
-
-    return element;
+    this.hideErrorElement();
+    this.showLoadingElement();
   }
 
-  showAudioUnsupportedElement() {
-    const element = this.element.querySelector(".audio-unsupported");
-    element.setAttribute("class", "audio-unsupported");
+  createErrorElement() {
+    const errorElement = document.createElement("div");
+    errorElement.className = "error hidden";
+
+    const titleElement = document.createElement("h1");
+    errorElement.appendChild(titleElement);
+
+    const descriptionElement = document.createElement("p");
+    errorElement.appendChild(descriptionElement);
+
+    return errorElement;
   }
 
-  hideAudioUnsupportedElement() {
-    const element = this.element.querySelector(".audio-unsupported");
-    element.setAttribute("class", "audio-unsupported hidden");
+  hideErrorElement() {
+    const errorElement = this.element.querySelector(".error");
+    errorElement.classList.add("hidden");
+  }
+
+  showErrorElement() {
+    const errorElement = this.element.querySelector(".error");
+    errorElement.classList.remove("hidden");
+  }
+
+  showError(title, description) {
+    const titleElement = this.element.querySelector(".error>h1");
+    titleElement.innerHTML = title;
+
+    const descriptionElement = this.element.querySelector(".error>p");
+    descriptionElement.innerHTML = description;
+
+    this.hideLoadingElement();
+    this.showErrorElement();
   }
 
   createCanvasElement() {
-    const element = document.createElement("canvas");
-    element.setAttribute("class", "hidden");
+    const canvasElement = document.createElement("canvas");
+    canvasElement.className = "hidden";
 
-    return element;
+    return canvasElement;
   }
 
   showCanvasElement() {
-    const element = this.element.querySelector("canvas");
-    element.removeAttribute("class");
+    const canvasElement = this.element.querySelector("canvas");
+    canvasElement.classList.add("hidden");
   }
 
   hideCanvasElement() {
-    const element = this.element.querySelector("canvas");
-    element.setAttribute("class", "hidden");
+    const canvasElement = this.element.querySelector("canvas");
+    canvasElement.classList.remove("hidden");
+  }
+
+  getCanvasContext() {
+    const canvasElement = this.element.querySelector("canvas");
+    return canvasElement.getContext("2d");
+  }
+
+  createAudioContext() {
+    if (window.AudioContext) {
+      return new AudioContext();
+    } else {
+      throw new Error("Audio unsupported.");
+    }
   }
 
   initializeAudio() {
     return new Promise((resolve, reject) => {
-      if (AudioContext) {
-        //this.showLoadingText("Loading Audio Buffer");
+      this.showLoadingDescription("Loading Audio Buffer");
 
-        const request = new XMLHttpRequest();
-        request.open("GET", audioUrl, true);
-        request.responseType = "arraybuffer";
+      const canvasContext = this.getCanvasContext();
+      const audioContext = this.createAudioContext();
+      const request = new XMLHttpRequest();
 
-        request.onload = (event) => {
-          //this.showLoadingText("Decoding Audio Data");
+      request.responseType = "arraybuffer";
+      request.open("GET", audioUrl, true);
 
-          const audioContext = new AudioContext();
-          audioContext.decodeAudioData(request.response, (audioBuffer) => {
-            //this.showLoadingText("Ready");
+      request.onload = (event) => {
+        this.showLoadingDescription("Decoding Audio Data");
 
-            resolve({ audioContext, audioBuffer });
-          }, (error) => {
-            reject(error);
-          });
-        };
+        audioContext.decodeAudioData(request.response, (audioBuffer) => {
+          this.showLoadingDescription("Ready");
 
-        request.onerror = (event) => {
-          reject(event.error);
-        };
+          resolve({ canvasContext, audioContext, audioBuffer });
+        }, (error) => {
+          reject(error);
+        });
+      };
 
-        request.send();
-      } else {
-        reject("Audio unsupported");
-      }
+      request.onerror = (event) => {
+        reject(event.error);
+      };
+
+      request.send();
     });
-
   }
 }
 

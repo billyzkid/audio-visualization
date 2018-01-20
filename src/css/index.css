@@ -53,44 +53,36 @@ canvas.hidden {
   color: #aaa;
 }
 
-.audio-unsupported {
+.error {
   position: absolute;
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
-  width: 15em;
   padding: 0.6em 1.2em;
   border: 0.2em solid #ff667f;
   border-radius: 0.4em;
   background-color: #ff3354;
 }
 
-.audio-unsupported.hidden {
-  display: none;
+.error.hidden {
+  opacity: 0;
+  visibility: hidden;
 }
 
-.audio-unsupported>h1 {
+.error>h1 {
   margin: 0;
-  font-size: 1.3em;
-  font-weight: normal;
+  font-size: 1.2em;
   color: #ffe5ea;
 }
 
-.audio-unsupported>p {
-  margin: 1em 0;
+.error>p {
+  margin: 0.4em 0;
   font-size: 1em;
   color: #ffccd4;
 }
 
-.audio-unsupported>a {
-  font-size: 0.8em;
-  text-transform: uppercase;
-  text-decoration: none;
-  color: #fff;
-}
-
-.audio-unsupported>a:hover {
-  text-decoration: underline;
+.error>p>a {
+  color: inherit;
 }
 
 #viz1, #viz2 {

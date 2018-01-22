@@ -3,16 +3,14 @@ import Star from "./Star.js";
 const fftSize = 1024;
 
 class Visualization {
-  constructor(elementOrId) {
-    console.log("Visualization.constructor", { elementOrId });
-
-    this.elementOrId = elementOrId;
-    this.element = null;
+  constructor(element) {
+    this.element = element;
   }
 
   load(url) {
     this.initializeElement();
-    this.initializeAudio(url).then(
+
+    return this.initializeAudio(url).then(
       ({ canvasContext, audioContext, audioBuffer }) => {
         console.log({ canvasContext, audioContext, audioBuffer });
 
@@ -21,39 +19,35 @@ class Visualization {
         audioAnalyser.minDecibels = -100;
         audioAnalyser.maxDecibels = -30;
         audioAnalyser.smoothingTimeConstant = 0.8;
-      },
-      (error) => {
+      }).catch((error) => {
         console.error(error);
 
-        if (error.message === "Audio unsupported.") {
+        if (error.message === "Web Audio API Unsupported") {
           this.showError("Audio Unsupported", "Sorry! This visualization requires the <a href=\"http://caniuse.com/#feat=audio-api\" target=\"_blank\">Web Audio API</a>.");
         } else {
-          this.showError("Error Occurred", "Oops! An unexpected error occurred. Please <a href=\"javascript:window.location.reload(true);\">try again</a>.");
+          this.showError("Error Occurred", "Oops! An unexpected error occurred. Please <a href=\"#\">try again</a>.");
+          const linkElement = this.element.querySelector(".error>p>a");
+
+          linkElement.addEventListener("click", () => {
+            this.load("ogg/new_year_dubstep_minimix.ogg");
+            return false;
+          });
         }
       });
   }
 
   initializeElement() {
-    if (!this.element) {
-      if (typeof this.elementOrId === "string") {
-        this.element = document.getElementById(this.elementOrId);
-      } else {
-        this.element = this.elementOrId;
-      }
-    }
-
-    const element = this.element;
-    element.classList.add("visualization");
-    element.innerHTML = "";
+    this.element.classList.add("visualization");
+    this.element.innerHTML = "";
 
     const canvasElement = this.createCanvasElement();
-    element.appendChild(canvasElement);
+    this.element.appendChild(canvasElement);
 
     const loadingElement = this.createLoadingElement();
-    element.appendChild(loadingElement);
+    this.element.appendChild(loadingElement);
 
     const errorElement = this.createErrorElement();
-    element.appendChild(errorElement);
+    this.element.appendChild(errorElement);
   }
 
   createCanvasElement() {
@@ -134,11 +128,13 @@ class Visualization {
   }
 
   createAudioContext() {
-    if (window.AudioContext) {
-      return new window.AudioContext();
-    } else {
-      throw new Error("Audio unsupported.");
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+
+    if (!AudioContext) {
+      throw new Error("Web Audio API Unsupported");
     }
+
+    return new AudioContext();
   }
 
   initializeAudio(url) {
@@ -149,25 +145,28 @@ class Visualization {
       const audioContext = this.createAudioContext();
       const request = new XMLHttpRequest();
 
+      request.addEventListener("load", () => {
+        if (request.status < 400) {
+          this.showLoadingDescription("Decoding Audio Data");
+
+          audioContext.decodeAudioData(request.response, (audioBuffer) => {
+            this.showLoadingDescription("Ready");
+
+            resolve({ canvasContext, audioContext, audioBuffer });
+          }, (error) => {
+            reject(error);
+          });
+        } else {
+          reject(`Request failed: ${request.statusText}`);
+        }
+      });
+
+      request.addEventListener("error", (event) => {
+        reject(event.error);
+      });
+
       request.responseType = "arraybuffer";
       request.open("GET", url, true);
-
-      request.onload = (event) => {
-        this.showLoadingDescription("Decoding Audio Data");
-
-        audioContext.decodeAudioData(request.response, (audioBuffer) => {
-          this.showLoadingDescription("Ready");
-
-          resolve({ canvasContext, audioContext, audioBuffer });
-        }, (error) => {
-          reject(error);
-        });
-      };
-
-      request.onerror = (event) => {
-        reject(event.error);
-      };
-
       request.send();
     });
   }

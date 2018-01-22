@@ -1,6 +1,5 @@
 class Star {
   constructor() {
-    console.log("Star.constructor");
   }
 }
 

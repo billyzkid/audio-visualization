@@ -1,7 +1,7 @@
 import Visualization from "./Visualization.js";
 
-const viz1 = new Visualization("viz1");
-const viz2 = new Visualization("viz2");
+const viz1 = new Visualization(document.getElementById("viz1"));
+const viz2 = new Visualization(document.getElementById("viz2"));
 
 viz1.load("ogg/new_year_dubstep_minimix.ogg");
 viz2.load("ogg/new_year_dubstep_minimix.ogg");

@@ -10,58 +10,40 @@ class Visualization {
   load(url) {
     this.url = url;
 
-    this.initializeElement();
-
-    return this.initializeAudio(url).then(
-      ({ canvasContext, audioContext, audioBuffer }) => {
-        console.log({ canvasContext, audioContext, audioBuffer });
-
-        const audioAnalyser = audioContext.createAnalyser();
-        audioAnalyser.fftSize = fftSize;
-        audioAnalyser.minDecibels = -100;
-        audioAnalyser.maxDecibels = -30;
-        audioAnalyser.smoothingTimeConstant = 0.8;
-      }).catch((error) => {
-        console.error(error);
-
-        this.showError(error);
-      });
-  }
-
-  reload() {
-    return this.load(this.url);
-  }
-
-  initializeElement() {
-    this.element.classList.add("visualization");
-    this.element.innerHTML = "";
-
-    const canvasElement = this.createCanvasElement();
-    this.element.appendChild(canvasElement);
-
-    const loadingElement = this.createLoadingElement();
-    this.element.appendChild(loadingElement);
-
-    const errorElement = this.createErrorElement();
-    this.element.appendChild(errorElement);
-  }
-
-  initializeAudio(url) {
     return new Promise((resolve, reject) => {
-      this.showLoadingDescription("Loading Audio Buffer");
+      const element = this.element;
+      element.classList.add("visualization");
+      element.innerHTML = "";
 
-      const canvasContext = this.getCanvasContext();
-      const audioContext = this.createAudioContext();
+      const canvasElement = document.createElement("canvas");
+      element.appendChild(canvasElement);
+
+      const loadingElement = document.createElement("div");
+      loadingElement.className = "loading hidden";
+      element.appendChild(loadingElement);
+
+      const errorElement = document.createElement("div");
+      errorElement.className = "error hidden";
+      element.appendChild(errorElement);
+
+      if (!AudioContext) {
+        throw new Error("Web Audio API unsupported.");
+      }
+
+      const renderingContext = canvasElement.getContext("2d");
+      const audioContext = new AudioContext();
       const request = new XMLHttpRequest();
+
+      this.onLoading("Loading Audio Buffer");
 
       request.addEventListener("load", () => {
         if (request.status < 400) {
-          this.showLoadingDescription("Decoding Audio Data");
+          this.onLoading("Decoding Audio Data");
 
           audioContext.decodeAudioData(request.response, (audioBuffer) => {
-            this.showLoadingDescription("Ready");
+            this.onLoading("Ready");
 
-            resolve({ canvasContext, audioContext, audioBuffer });
+            resolve({ renderingContext, audioContext, audioBuffer });
           }, (error) => {
             reject(error);
           });
@@ -77,79 +59,53 @@ class Visualization {
       request.responseType = "arraybuffer";
       request.open("GET", url, true);
       request.send();
+    }).then(({ renderingContext, audioContext, audioBuffer }) => {
+      console.log({ renderingContext, audioContext, audioBuffer });
+      this.onLoadCompleted();
+      return this.render(renderingContext, audioContext, audioBuffer);
+    }).catch((error) => {
+      console.error(error);
+      this.onLoadFailed(error);
     });
   }
 
-  createCanvasElement() {
-    const canvasElement = document.createElement("canvas");
-
-    return canvasElement;
+  reload() {
+    return this.load(this.url);
   }
 
-  createLoadingElement() {
-    const loadingElement = document.createElement("div");
-    loadingElement.className = "loading hidden";
-    loadingElement.innerHTML = "<h1>Loading&hellip;</h1><p></p>";
-
-    return loadingElement;
-  }
-
-  createErrorElement() {
-    const errorElement = document.createElement("div");
-    errorElement.className = "error hidden";
-    errorElement.innerHTML = "<h1></h1><p></p>";
-
-    return errorElement;
-  }
-
-  showLoadingDescription(description) {
+  onLoading(step) {
     const loadingElement = this.element.querySelector(".loading");
-    const errorElement = this.element.querySelector(".error");
-
-    loadingElement.querySelector("p").innerHTML = `&ndash; ${description} &ndash;`;
-
-    this.hideElement(errorElement);
-    this.showElement(loadingElement);
+    loadingElement.innerHTML = `<h1>Loading&hellip;</h1><p>&ndash; ${step} &ndash;</p>`;
+    loadingElement.classList.remove("hidden");
   }
 
-  showError(error) {
+  onLoadCompleted() {
     const loadingElement = this.element.querySelector(".loading");
+    loadingElement.classList.add("hidden");
+  }
+
+  onLoadFailed(error) {
+    const loadingElement = this.element.querySelector(".loading");
+    loadingElement.classList.add("hidden");
+
     const errorElement = this.element.querySelector(".error");
 
     if (error.message === "Web Audio API unsupported.") {
-      errorElement.querySelector("h1").innerHTML = "Audio Unsupported";
-      errorElement.querySelector("p").innerHTML = "Sorry! This visualization requires the <a href=\"http://caniuse.com/#feat=audio-api\" target=\"_blank\">Web Audio API</a>.";
+      errorElement.innerHTML = "<h1>Audio Unsupported</h1><p>Sorry! This visualization requires the <a href=\"http://caniuse.com/#feat=audio-api\" target=\"_blank\">Web Audio API</a>.</p>";
     } else {
-      errorElement.querySelector("h1").innerHTML = "Error Occurred";
-      errorElement.querySelector("p").innerHTML = "Oops! An unexpected error occurred. Please <a href=\"#\">try again</a>.";
-      errorElement.querySelector("p>a").addEventListener("click", () => { this.reload(); return false; });
+      errorElement.innerHTML = "<h1>Error Occurred</h1><p>Oops! An unexpected error occurred. Please <a href=\"#\">try again</a>.</p>";
+      errorElement.querySelector("a").addEventListener("click", () => { this.reload(); return false; });
     }
 
-    this.hideElement(loadingElement);
-    this.showElement(errorElement);
+    errorElement.classList.remove("hidden");
   }
 
-  hideElement(element) {
-    element.classList.add("hidden");
-  }
-
-  showElement(element) {
-    element.classList.remove("hidden");
-  }
-
-  getCanvasContext() {
-    const canvasElement = this.element.querySelector("canvas");
-    return canvasElement.getContext("2d");
-  }
-
-  createAudioContext() {
-    const AudioContext = window.AudioContext || window.webkitAudioContext;
-
-    if (!AudioContext) {
-      throw new Error("Web Audio API unsupported.");
-    }
-
-    return new AudioContext();
+  render(renderingContext, audioContext, audioBuffer) {
+    const audioAnalyser = audioContext.createAnalyser();
+    audioAnalyser.fftSize = fftSize;
+    audioAnalyser.minDecibels = -100;
+    audioAnalyser.maxDecibels = -30;
+    audioAnalyser.smoothingTimeConstant = 0.8;
   }
 }
 

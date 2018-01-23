@@ -8,6 +8,8 @@ class Visualization {
   }
 
   load(url) {
+    this.url = url;
+
     this.initializeElement();
 
     return this.initializeAudio(url).then(
@@ -22,18 +24,12 @@ class Visualization {
       }).catch((error) => {
         console.error(error);
 
-        if (error.message === "Web Audio API Unsupported") {
-          this.showError("Audio Unsupported", "Sorry! This visualization requires the <a href=\"http://caniuse.com/#feat=audio-api\" target=\"_blank\">Web Audio API</a>.");
-        } else {
-          this.showError("Error Occurred", "Oops! An unexpected error occurred. Please <a href=\"#\">try again</a>.");
-          const linkElement = this.element.querySelector(".error>p>a");
-
-          linkElement.addEventListener("click", () => {
-            this.load("ogg/new_year_dubstep_minimix.ogg");
-            return false;
-          });
-        }
+        this.showError(error);
       });
+  }
+
+  reload() {
+    return this.load(this.url);
   }
 
   initializeElement() {
@@ -48,93 +44,6 @@ class Visualization {
 
     const errorElement = this.createErrorElement();
     this.element.appendChild(errorElement);
-  }
-
-  createCanvasElement() {
-    const canvasElement = document.createElement("canvas");
-
-    return canvasElement;
-  }
-
-  createLoadingElement() {
-    const loadingElement = document.createElement("div");
-    loadingElement.className = "loading hidden";
-
-    const titleElement = document.createElement("h1");
-    titleElement.innerHTML = "Loading&hellip;";
-    loadingElement.appendChild(titleElement);
-
-    const descriptionElement = document.createElement("p");
-    loadingElement.appendChild(descriptionElement);
-
-    return loadingElement;
-  }
-
-  hideLoadingElement() {
-    const loadingElement = this.element.querySelector(".loading");
-    loadingElement.classList.add("hidden");
-  }
-
-  showLoadingElement() {
-    const loadingElement = this.element.querySelector(".loading");
-    loadingElement.classList.remove("hidden");
-  }
-
-  showLoadingDescription(description) {
-    const descriptionElement = this.element.querySelector(".loading>p");
-    descriptionElement.innerHTML = `&ndash; ${description} &ndash;`;
-
-    this.hideErrorElement();
-    this.showLoadingElement();
-  }
-
-  createErrorElement() {
-    const errorElement = document.createElement("div");
-    errorElement.className = "error hidden";
-
-    const titleElement = document.createElement("h1");
-    errorElement.appendChild(titleElement);
-
-    const descriptionElement = document.createElement("p");
-    errorElement.appendChild(descriptionElement);
-
-    return errorElement;
-  }
-
-  hideErrorElement() {
-    const errorElement = this.element.querySelector(".error");
-    errorElement.classList.add("hidden");
-  }
-
-  showErrorElement() {
-    const errorElement = this.element.querySelector(".error");
-    errorElement.classList.remove("hidden");
-  }
-
-  showError(title, description) {
-    const titleElement = this.element.querySelector(".error>h1");
-    titleElement.innerHTML = title;
-
-    const descriptionElement = this.element.querySelector(".error>p");
-    descriptionElement.innerHTML = description;
-
-    this.hideLoadingElement();
-    this.showErrorElement();
-  }
-
-  getCanvasContext() {
-    const canvasElement = this.element.querySelector("canvas");
-    return canvasElement.getContext("2d");
-  }
-
-  createAudioContext() {
-    const AudioContext = window.AudioContext || window.webkitAudioContext;
-
-    if (!AudioContext) {
-      throw new Error("Web Audio API Unsupported");
-    }
-
-    return new AudioContext();
   }
 
   initializeAudio(url) {
@@ -169,6 +78,78 @@ class Visualization {
       request.open("GET", url, true);
       request.send();
     });
+  }
+
+  createCanvasElement() {
+    const canvasElement = document.createElement("canvas");
+
+    return canvasElement;
+  }
+
+  createLoadingElement() {
+    const loadingElement = document.createElement("div");
+    loadingElement.className = "loading hidden";
+    loadingElement.innerHTML = "<h1>Loading&hellip;</h1><p></p>";
+
+    return loadingElement;
+  }
+
+  createErrorElement() {
+    const errorElement = document.createElement("div");
+    errorElement.className = "error hidden";
+    errorElement.innerHTML = "<h1></h1><p></p>";
+
+    return errorElement;
+  }
+
+  showLoadingDescription(description) {
+    const loadingElement = this.element.querySelector(".loading");
+    const errorElement = this.element.querySelector(".error");
+
+    loadingElement.querySelector("p").innerHTML = `&ndash; ${description} &ndash;`;
+
+    this.hideElement(errorElement);
+    this.showElement(loadingElement);
+  }
+
+  showError(error) {
+    const loadingElement = this.element.querySelector(".loading");
+    const errorElement = this.element.querySelector(".error");
+
+    if (error.message === "Web Audio API unsupported.") {
+      errorElement.querySelector("h1").innerHTML = "Audio Unsupported";
+      errorElement.querySelector("p").innerHTML = "Sorry! This visualization requires the <a href=\"http://caniuse.com/#feat=audio-api\" target=\"_blank\">Web Audio API</a>.";
+    } else {
+      errorElement.querySelector("h1").innerHTML = "Error Occurred";
+      errorElement.querySelector("p").innerHTML = "Oops! An unexpected error occurred. Please <a href=\"#\">try again</a>.";
+      errorElement.querySelector("p>a").addEventListener("click", () => { this.reload(); return false; });
+    }
+
+    this.hideElement(loadingElement);
+    this.showElement(errorElement);
+  }
+
+  hideElement(element) {
+    element.classList.add("hidden");
+  }
+
+  showElement(element) {
+    element.classList.remove("hidden");
+  }
+
+  getCanvasContext() {
+    const canvasElement = this.element.querySelector("canvas");
+    return canvasElement.getContext("2d");
+  }
+
+  createAudioContext() {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+
+    if (!AudioContext) {
+      throw new Error("Web Audio API unsupported.");
+    }
+
+    return new AudioContext();
   }
 }
 

@@ -26,21 +26,23 @@ class Visualization {
       errorElement.className = "error hidden";
       element.appendChild(errorElement);
 
-      if (!AudioContext) {
-        throw new Error("Web Audio API unsupported.");
+      if (!url) {
+        throw new Error("URL required.");
       }
 
-      const renderingContext = canvasElement.getContext("2d");
-      const audioContext = new AudioContext();
+      const renderingContext = this.getRenderingContext();
+      const audioContext = this.createAudioContext();
       const request = new XMLHttpRequest();
 
       this.onLoading("Loading Audio Buffer");
 
       request.addEventListener("load", () => {
-        if (request.status < 400) {
+        const { status, statusText, response } = request;
+
+        if (status < 400) {
           this.onLoading("Decoding Audio Data");
 
-          audioContext.decodeAudioData(request.response, (audioBuffer) => {
+          audioContext.decodeAudioData(response, (audioBuffer) => {
             this.onLoading("Ready");
 
             resolve({ renderingContext, audioContext, audioBuffer });
@@ -48,7 +50,7 @@ class Visualization {
             reject(error);
           });
         } else {
-          reject(`Request failed: ${request.statusText}`);
+          reject(`Request failed: ${statusText}`);
         }
       });
 
@@ -98,6 +100,21 @@ class Visualization {
     }
 
     errorElement.classList.remove("hidden");
+  }
+
+  getRenderingContext() {
+    const canvasElement = this.element.querySelector("canvas");
+    return canvasElement.getContext("2d")
+  }
+
+  createAudioContext() {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+
+    if (!AudioContext) {
+      throw new Error("Web Audio API unsupported.");
+    }
+
+    return new AudioContext();
   }
 
   render(renderingContext, audioContext, audioBuffer) {

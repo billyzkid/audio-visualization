@@ -1,7 +1,5 @@
 import Star from "./Star.js";
 
-const fftSize = 1024;
-
 class Visualization {
   constructor(element) {
     this.element = element;
@@ -119,10 +117,28 @@ class Visualization {
 
   render(renderingContext, audioContext, audioBuffer) {
     const audioAnalyser = audioContext.createAnalyser();
-    audioAnalyser.fftSize = fftSize;
+    audioAnalyser.fftSize = 1024;
     audioAnalyser.minDecibels = -100;
     audioAnalyser.maxDecibels = -30;
     audioAnalyser.smoothingTimeConstant = 0.8;
+    audioAnalyser.connect(audioContext.destination);
+
+    const gainNode = audioContext.createGain();
+    gainNode.connect(audioAnalyser);
+
+    //const frequencyData = new Uint8Array(audioAnalyser.frequencyBinCount);
+    //const timeData = new Uint8Array(audioAnalyser.frequencyBinCount);
+
+    //playing = true;
+    //startedAt = pausedAt ? Date.now() - pausedAt : Date.now();
+    //asource = null;
+    const audioBufferSource = audioContext.createBufferSource();
+    audioBufferSource.buffer = audioBuffer;
+    audioBufferSource.loop = true;
+    audioBufferSource.connect(gainNode);
+    audioBufferSource.start()
+    //pausedAt ? audioBufferSource.start(0, pausedAt / 1000) : audioBufferSource.start();
+
   }
 }
 

@@ -2,10 +2,18 @@ import Star from "./Star.js";
 
 class Visualization {
   constructor(element) {
+    if (!element) {
+      throw new Error("Element required.");
+    }
+
     this.element = element;
   }
 
   load(url) {
+    if (!url) {
+      throw new Error("URL required.");
+    }
+
     this.url = url;
 
     return new Promise((resolve, reject) => {
@@ -16,6 +24,16 @@ class Visualization {
       const canvasElement = document.createElement("canvas");
       element.appendChild(canvasElement);
 
+      const playElement = document.createElement("a");
+      playElement.className = "play hidden";
+      playElement.innerHTML = "Play"
+      element.appendChild(playElement);
+
+      const pauseElement = document.createElement("a");
+      pauseElement.className = "pause hidden";
+      pauseElement.innerHTML = "Pause"
+      element.appendChild(pauseElement);
+
       const loadingElement = document.createElement("div");
       loadingElement.className = "loading hidden";
       element.appendChild(loadingElement);
@@ -23,10 +41,6 @@ class Visualization {
       const errorElement = document.createElement("div");
       errorElement.className = "error hidden";
       element.appendChild(errorElement);
-
-      if (!url) {
-        throw new Error("URL required.");
-      }
 
       const renderingContext = this.getRenderingContext();
       const audioContext = this.createAudioContext();
@@ -86,8 +100,6 @@ class Visualization {
 
   onLoadFailed(error) {
     const loadingElement = this.element.querySelector(".loading");
-    loadingElement.classList.add("hidden");
-
     const errorElement = this.element.querySelector(".error");
 
     if (error.message === "Web Audio API unsupported.") {
@@ -97,6 +109,7 @@ class Visualization {
       errorElement.querySelector("a").addEventListener("click", () => { this.reload(); return false; });
     }
 
+    loadingElement.classList.add("hidden");
     errorElement.classList.remove("hidden");
   }
 

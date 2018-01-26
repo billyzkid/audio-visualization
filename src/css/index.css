@@ -7,12 +7,6 @@ body {
   margin: 0;
 }
 
-canvas {
-  display: block;
-  width: 100%;
-  height: 100%;
-}
-
 .visualization {
   position: relative;
   font-size: 14px;
@@ -20,7 +14,25 @@ canvas {
   background-color: #000;
 }
 
-.loading {
+.visualization>canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.visualization>a.play,
+.visualization>a.pause {
+  /* cursor: pointer; */
+  position: absolute;
+  top: 0;
+  left: 0;
+  color: #fff;
+  background-color: #000;
+  font-size: 0.9em;
+  padding: 1em;
+}
+
+.visualization>.loading {
   position: absolute;
   left: 50%;
   top: 50%;
@@ -28,12 +40,12 @@ canvas {
   transition: all 400ms;
 }
 
-.loading.hidden {
+.visualization>.loading.hidden {
   opacity: 0;
   visibility: hidden;
 }
 
-.loading>h1 {
+.visualization>.loading>h1 {
   margin: 0;
   font-size: 1em;
   font-weight: normal;
@@ -41,7 +53,7 @@ canvas {
   color: #fff;
 }
 
-.loading>p {
+.visualization>.loading>p {
   margin: 0.2em 0;
   font-size: 0.8em;
   text-align: center;
@@ -49,7 +61,7 @@ canvas {
   color: #aaa;
 }
 
-.error {
+.visualization>.error {
   position: absolute;
   left: 50%;
   top: 50%;
@@ -60,29 +72,23 @@ canvas {
   background-color: #ff3354;
 }
 
-.error.hidden {
+.visualization>.error.hidden {
   opacity: 0;
   visibility: hidden;
 }
 
-.error>h1 {
+.visualization>.error>h1 {
   margin: 0;
   font-size: 1.2em;
   color: #ffe5ea;
 }
 
-.error>p {
+.visualization>.error>p {
   margin: 0.4em 0;
   font-size: 1em;
   color: #ffccd4;
 }
 
-.error>p>a {
+.visualization>.error>p>a {
   color: inherit;
-}
-
-#viz1, #viz2 {
-  width: 600px;
-  height: 400px;
-  margin: 10px;
 }

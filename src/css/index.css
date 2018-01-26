@@ -22,7 +22,7 @@ body {
 
 .visualization>a.play,
 .visualization>a.pause {
-  /* cursor: pointer; */
+  cursor: pointer;
   position: absolute;
   top: 0;
   left: 0;
@@ -90,5 +90,6 @@ body {
 }
 
 .visualization>.error>p>a {
+  cursor: pointer;
   color: inherit;
 }

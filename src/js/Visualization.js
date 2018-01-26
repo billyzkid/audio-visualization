@@ -26,12 +26,14 @@ class Visualization {
 
       const playElement = document.createElement("a");
       playElement.className = "play hidden";
-      playElement.innerHTML = "Play"
+      playElement.innerHTML = "Play";
+      playElement.addEventListener("click", this.onPlayClick.bind(this));
       element.appendChild(playElement);
 
       const pauseElement = document.createElement("a");
       pauseElement.className = "pause hidden";
-      pauseElement.innerHTML = "Pause"
+      pauseElement.innerHTML = "Pause";
+      pauseElement.addEventListener("click", this.onPauseClick.bind(this));
       element.appendChild(pauseElement);
 
       const loadingElement = document.createElement("div");
@@ -73,14 +75,9 @@ class Visualization {
       request.responseType = "arraybuffer";
       request.open("GET", url, true);
       request.send();
-    }).then(({ renderingContext, audioContext, audioBuffer }) => {
-      console.log({ renderingContext, audioContext, audioBuffer });
-      this.onLoadCompleted();
-      return this.render(renderingContext, audioContext, audioBuffer);
-    }).catch((error) => {
-      console.error(error);
-      this.onLoadFailed(error);
-    });
+    }).then(
+      this.onLoadCompleted.bind(this),
+      this.onLoadFailed.bind(this));
   }
 
   reload() {
@@ -93,24 +90,47 @@ class Visualization {
     loadingElement.classList.remove("hidden");
   }
 
-  onLoadCompleted() {
+  onLoadCompleted(result) {
+    console.log(result);
+
     const loadingElement = this.element.querySelector(".loading");
     loadingElement.classList.add("hidden");
+
+    const { renderingContext, audioContext, audioBuffer } = result;
+    this.render(renderingContext, audioContext, audioBuffer);
   }
 
   onLoadFailed(error) {
+    console.error(error);
+
     const loadingElement = this.element.querySelector(".loading");
+    loadingElement.classList.add("hidden");
+
     const errorElement = this.element.querySelector(".error");
 
     if (error.message === "Web Audio API unsupported.") {
       errorElement.innerHTML = "<h1>Audio Unsupported</h1><p>Sorry! This visualization requires the <a href=\"http://caniuse.com/#feat=audio-api\" target=\"_blank\">Web Audio API</a>.</p>";
     } else {
-      errorElement.innerHTML = "<h1>Error Occurred</h1><p>Oops! An unexpected error occurred. Please <a href=\"#\">try again</a>.</p>";
-      errorElement.querySelector("a").addEventListener("click", () => { this.reload(); return false; });
+      errorElement.innerHTML = "<h1>Error Occurred</h1><p>Oops! An unexpected error occurred. Please <a>try again</a>.</p>";
+      errorElement.querySelector("a").addEventListener("click", this.onReloadClick);
     }
 
-    loadingElement.classList.add("hidden");
     errorElement.classList.remove("hidden");
+  }
+
+  onReloadClick(event) {
+    event.preventDefault();
+    this.reload();
+  }
+
+  onPlayClick(event) {
+    event.preventDefault();
+    this.play();
+  }
+
+  onPauseClick(event) {
+    event.preventDefault();
+    this.pause();
   }
 
   getRenderingContext() {
@@ -151,7 +171,14 @@ class Visualization {
     audioBufferSource.connect(gainNode);
     audioBufferSource.start()
     //pausedAt ? audioBufferSource.start(0, pausedAt / 1000) : audioBufferSource.start();
+  }
 
+  play() {
+    console.log("Play!");
+  }
+
+  pause() {
+    console.log("Pause!");
   }
 }
 

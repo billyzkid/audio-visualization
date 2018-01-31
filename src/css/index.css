@@ -4,7 +4,26 @@ html {
 
 body {
   height: 100%;
-  margin: 0;
+  margin: 10px;
+}
+
+.container {
+  display: flex;
+  flex-wrap: wrap;
+  flex-direction: row;
+  align-items: flex-start;
+  align-content: flex-start;
+  justify-content: center;
+}
+
+#button1, #button2, #button3 {
+  margin: 10px;
+}
+
+#viz1, #viz2, #viz3 {
+  width: 600px;
+  height: 400px;
+  margin: 10px;
 }
 
 .visualization {
@@ -20,8 +39,7 @@ body {
   height: 100%;
 }
 
-.visualization>a.play,
-.visualization>a.pause {
+.visualization>a.play, .visualization>a.pause {
   cursor: pointer;
   position: absolute;
   top: 0;

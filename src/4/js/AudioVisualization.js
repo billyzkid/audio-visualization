@@ -35,9 +35,38 @@ class AudioVisualization extends HTMLElement {
     return [
       "autoplay",
       "controls",
+      "loop",
+      "muted",
+      "preload",
       "src"
     ];
   }
+
+  //#region Properties
+
+  // audioTracks
+  // buffered
+  // crossOrigin
+  // currentSrc
+  // defaultPlaybackRate
+  // mediaKeys
+  // msAudioCategory
+  // msAudioDeviceType
+  // msGraphicsTrustStatus
+  // msKeys
+  // msPlayToDisabled
+  // msPlayToPreferredSourceUri
+  // msPlayToPrimary
+  // msPlayToSource
+  // msRealTime
+  // networkState
+  // playbackRate
+  // played
+  // readyState
+  // seekable
+  // srcObject
+  // textTracks
+  // videoTracks
 
   get autoplay() {
     console.log("AudioVisualization.autoplay (get)");
@@ -71,6 +100,104 @@ class AudioVisualization extends HTMLElement {
     }
   }
 
+  get currentTime() {
+    console.log("AudioVisualization.currentTime (get)");
+
+    return this.audioElement.currentTime;
+  }
+
+  set currentTime(value) {
+    console.log("AudioVisualization.currentTime (set)", { value });
+
+    this.audioElement.currentTime = value;
+  }
+
+  get defaultMuted() {
+    console.log("AudioVisualization.defaultMuted (get)");
+
+    return this.hasAttribute("muted");
+  }
+
+  set defaultMuted(value) {
+    console.log("AudioVisualization.defaultMuted (set)", { value });
+
+    if (value) {
+      this.setAttribute("muted", "");
+    } else {
+      this.removeAttribute("muted");
+    }
+  }
+
+  get duration() {
+    console.log("AudioVisualization.duration (get)");
+
+    return this.audioElement.duration;
+  }
+
+  get ended() {
+    console.log("AudioVisualization.ended (get)");
+
+    return this.audioElement.ended;
+  }
+
+  get error() {
+    console.log("AudioVisualization.error (get)");
+
+    return this.audioElement.error;
+  }
+
+  get loop() {
+    console.log("AudioVisualization.loop (get)");
+
+    return this.hasAttribute("loop");
+  }
+
+  set loop(value) {
+    console.log("AudioVisualization.loop (set)", { value });
+
+    if (value) {
+      this.setAttribute("loop", "");
+    } else {
+      this.removeAttribute("loop");
+    }
+  }
+
+  get muted() {
+    console.log("AudioVisualization.muted (get)");
+
+    return this.audioElement.muted;
+  }
+
+  set muted(value) {
+    console.log("AudioVisualization.muted (set)", { value });
+
+    this.audioElement.muted = value;
+  }
+
+  get paused() {
+    console.log("AudioVisualization.paused (get)");
+
+    return this.audioElement.paused;
+  }
+
+  get preload() {
+    console.log("AudioVisualization.preload (get)");
+
+    return this.getAttribute("preload");
+  }
+
+  set preload(value) {
+    console.log("AudioVisualization.preload (set)", { value });
+
+    this.setAttribute("preload", value);
+  }
+
+  get seeking() {
+    console.log("AudioVisualization.seeking (get)");
+
+    return this.audioElement.seeking;
+  }
+
   get src() {
     console.log("AudioVisualization.src (get)");
 
@@ -81,6 +208,51 @@ class AudioVisualization extends HTMLElement {
     console.log("AudioVisualization.src (set)", { value });
 
     this.setAttribute("src", value);
+  }
+
+  get volume() {
+    console.log("AudioVisualization.volume (get)");
+
+    return this.audioElement.volume;
+  }
+
+  set volume(value) {
+    console.log("AudioVisualization.volume (set)", { value });
+
+    this.audioElement.volume = value;
+  }
+
+  //#endregion
+
+  //#region Methods
+
+  // addTextTrack
+  // canPlayType
+  // msClearEffects
+  // msGetAsCastingSource
+  // msInsertAudioEffect
+  // msSetMediaKeys
+  // msSetMediaProtectionManager
+  // setMediaKeys
+  // onencrypted
+  // onmsneedkey
+
+  load() {
+    console.log("AudioVisualization.load");
+
+    this.audioElement.load();
+  }
+
+  pause() {
+    console.log("AudioVisualization.pause");
+
+    this.audioElement.pause();
+  }
+
+  play() {
+    console.log("AudioVisualization.play");
+
+    this.audioElement.play();
   }
 
   connectedCallback() {
@@ -104,6 +276,8 @@ class AudioVisualization extends HTMLElement {
       this.audioElement.removeAttribute(name);
     }
   }
+
+  //#endregion
 }
 
 export default AudioVisualization;

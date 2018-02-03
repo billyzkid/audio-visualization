@@ -6,7 +6,12 @@ class AudioVisualization extends HTMLElement {
     console.log("AudioVisualization (ctor)");
 
     try {
-      const audioPlayer = new AudioPlayer();
+      this.audioElement = document.createElement("audio");
+      this.audioElement.id = "myAudio";
+      document.body.appendChild(this.audioElement);
+
+      //this.audioPlayer = new AudioPlayer();
+
       const shadowRoot = this.attachShadow({ mode: "open" });
       shadowRoot.innerHTML = `
         <style>
@@ -27,23 +32,11 @@ class AudioVisualization extends HTMLElement {
   }
 
   static get observedAttributes() {
-    return ["src", "autoplay", "controls"];
-  }
-
-  get src() {
-    console.log("AudioVisualization.src (get)");
-
-    return this.getAttribute("src");
-  }
-
-  set src(value) {
-    console.log("AudioVisualization.src (set)", { value });
-
-    if (value) {
-      this.setAttribute("src", value);
-    } else {
-      this.removeAttribute("src");
-    }
+    return [
+      "autoplay",
+      "controls",
+      "src"
+    ];
   }
 
   get autoplay() {
@@ -78,6 +71,18 @@ class AudioVisualization extends HTMLElement {
     }
   }
 
+  get src() {
+    console.log("AudioVisualization.src (get)");
+
+    return this.getAttribute("src");
+  }
+
+  set src(value) {
+    console.log("AudioVisualization.src (set)", { value });
+
+    this.setAttribute("src", value);
+  }
+
   connectedCallback() {
     console.log("AudioVisualization.connectedCallback");
   }
@@ -92,6 +97,12 @@ class AudioVisualization extends HTMLElement {
 
   attributeChangedCallback(name, oldValue, newValue) {
     console.log("AudioVisualization.attributeChangedCallback", { name, oldValue, newValue });
+
+    if (newValue !== null) {
+      this.audioElement.setAttribute(name, newValue);
+    } else {
+      this.audioElement.removeAttribute(name);
+    }
   }
 }
 

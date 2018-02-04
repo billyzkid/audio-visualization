@@ -1,39 +1,22 @@
 import AudioPlayer from "./AudioPlayer.js";
 
+// Only one per page!
+const audioContext = new AudioContext();
+
 class AudioVisualization extends HTMLElement {
   constructor() {
     super();
     console.log("AudioVisualization (ctor)");
 
     try {
-      this.audioElement = document.createElement("audio");
-      this.audioElement.id = "myAudio";
+      this.audioAnalyserNode = audioContext.createAnalyser();
+      this.audioAnalyserNode.connect(audioContext.destination);
 
-      const audioEventHandler = (event) => this.handleEvent(event);
-      this.audioElement.onabort = audioEventHandler;
-      this.audioElement.oncanplay = audioEventHandler;
-      this.audioElement.oncanplaythrough = audioEventHandler;
-      this.audioElement.ondurationchange = audioEventHandler;
-      this.audioElement.onemptied = audioEventHandler;
-      this.audioElement.onended = audioEventHandler;
-      this.audioElement.onerror = audioEventHandler;
-      this.audioElement.onloadeddata = audioEventHandler;
-      this.audioElement.onloadedmetadata = audioEventHandler;
-      this.audioElement.onloadstart = audioEventHandler;
-      this.audioElement.onpause = audioEventHandler;
-      this.audioElement.onplay = audioEventHandler;
-      this.audioElement.onplaying = audioEventHandler;
-      this.audioElement.onprogress = audioEventHandler;
-      this.audioElement.onratechange = audioEventHandler;
-      this.audioElement.onseeked = audioEventHandler;
-      this.audioElement.onseeking = audioEventHandler;
-      this.audioElement.onstalled = audioEventHandler;
-      this.audioElement.onsuspend = audioEventHandler;
-      this.audioElement.ontimeupdate = audioEventHandler;
-      this.audioElement.onvolumechange = audioEventHandler;
-      this.audioElement.onwaiting = audioEventHandler;
+      this.audioElement = this.createAudioElement();
+      this.audioSourceNode = audioContext.createMediaElementSource(this.audioElement);
+      this.audioSourceNode.connect(this.audioAnalyserNode);
 
-      document.body.appendChild(this.audioElement);
+      this.letsDraw();
 
       //this.audioPlayer = new AudioPlayer();
 
@@ -54,6 +37,33 @@ class AudioVisualization extends HTMLElement {
     } catch (error) {
       console.error(error);
     }
+  }
+
+  static get dispatchedEvents() {
+    return [
+      "abort",
+      "canplay",
+      "canplaythrough",
+      "durationchange",
+      "emptied",
+      "ended",
+      "error",
+      "loadeddata",
+      "loadedmetadata",
+      "loadstart",
+      "pause",
+      "play",
+      "playing",
+      "progress",
+      "ratechange",
+      "seeked",
+      "seeking",
+      "stalled",
+      "suspend",
+      "timeupdate",
+      "volumechange",
+      "waiting"
+    ];
   }
 
   static get observedAttributes() {
@@ -302,10 +312,54 @@ class AudioVisualization extends HTMLElement {
     }
   }
 
+  createAudioElement() {
+    console.log("AudioVisualization.createAudioElement");
+
+    const audioElement = document.createElement("audio");
+    const audioEventHandler = (event) => this.handleEvent(event);
+
+    AudioVisualization.dispatchedEvents.forEach((e) => {
+      audioElement[`on${e}`] = audioEventHandler;
+    });
+
+    // TODO: Remove this
+    audioElement.id = "myAudio";
+    document.body.appendChild(audioElement);
+
+    return audioElement;
+  }
+
   handleEvent(event) {
     console.log("AudioVisualization.handleEvent", { event });
 
     this.dispatchEvent(new Event(event.type, event));
+  }
+
+  letsDraw() {
+    console.log("AudioVisualization.letsDraw");
+
+    // window.requestAnimationFrame(() => this.letsDraw());
+    // fbc_array = new Uint8Array(analyser.frequencyBinCount);
+    // analyser.getByteFrequencyData(fbc_array); //get frequency from the analyser node
+    // ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // ctx.fillStyle = "white";
+    // ctx.font = "bold 12px Arial";
+    // ctx.fillText("currently playing:" + trackName, 10, 20);//this works
+
+    // bars = 150;
+    // for (var i = 0; i < analyser.frequencyBinCount; i++) { //but this doesn't
+    //   /*fill the canvas*/
+    //   x = i * 2;
+    //   barWidth = 1;
+    //   barHeight = -(fbc_array[i] / 1.8);
+
+    //   //colours react to the  frequency loudness
+    //   hue = parseInt(500 * (1 - (barHeight / 200)), 10);
+    //   ctx.fillStyle = 'hsl(' + hue + ',75%,50%)';
+
+    //   ctx.fillRect(x, canvas.height, barWidth, barHeight);
+    // }
   }
 
   //#endregion

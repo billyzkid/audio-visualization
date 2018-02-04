@@ -8,6 +8,31 @@ class AudioVisualization extends HTMLElement {
     try {
       this.audioElement = document.createElement("audio");
       this.audioElement.id = "myAudio";
+
+      const audioEventHandler = (event) => this.handleEvent(event);
+      this.audioElement.onabort = audioEventHandler;
+      this.audioElement.oncanplay = audioEventHandler;
+      this.audioElement.oncanplaythrough = audioEventHandler;
+      this.audioElement.ondurationchange = audioEventHandler;
+      this.audioElement.onemptied = audioEventHandler;
+      this.audioElement.onended = audioEventHandler;
+      this.audioElement.onerror = audioEventHandler;
+      this.audioElement.onloadeddata = audioEventHandler;
+      this.audioElement.onloadedmetadata = audioEventHandler;
+      this.audioElement.onloadstart = audioEventHandler;
+      this.audioElement.onpause = audioEventHandler;
+      this.audioElement.onplay = audioEventHandler;
+      this.audioElement.onplaying = audioEventHandler;
+      this.audioElement.onprogress = audioEventHandler;
+      this.audioElement.onratechange = audioEventHandler;
+      this.audioElement.onseeked = audioEventHandler;
+      this.audioElement.onseeking = audioEventHandler;
+      this.audioElement.onstalled = audioEventHandler;
+      this.audioElement.onsuspend = audioEventHandler;
+      this.audioElement.ontimeupdate = audioEventHandler;
+      this.audioElement.onvolumechange = audioEventHandler;
+      this.audioElement.onwaiting = audioEventHandler;
+
       document.body.appendChild(this.audioElement);
 
       //this.audioPlayer = new AudioPlayer();
@@ -275,6 +300,12 @@ class AudioVisualization extends HTMLElement {
     } else {
       this.audioElement.removeAttribute(name);
     }
+  }
+
+  handleEvent(event) {
+    console.log("AudioVisualization.handleEvent", { event });
+
+    this.dispatchEvent(new Event(event.type, event));
   }
 
   //#endregion

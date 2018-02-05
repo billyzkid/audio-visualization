@@ -21,14 +21,29 @@ class AudioVisualization extends HTMLElement {
     this.shadowRoot.innerHTML = `
       <style>
         :host {
-          display: block;
+          display: inline-block;
           width: 300px;
           height: 150px;
+        }
+        div {
+          display: flex;
+          flex-direction: column;
+          width: 100%;
+          height: 100%;
+        }
+        canvas {
+          flex: 1;
+          min-height: 0;
           background-color: #000;
         }
+        audio {
+          width: 100%;
+        }
       </style>
-      <audio></audio>
-      <canvas></canvas>
+      <div>
+        <canvas></canvas>
+        <audio controls></audio>
+      </div>
     `;
   }
 

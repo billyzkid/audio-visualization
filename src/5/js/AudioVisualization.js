@@ -24,20 +24,27 @@ class AudioVisualization extends HTMLElement {
           display: inline-block;
           width: 300px;
           height: 150px;
+          vertical-align: top;
+          background-color: #000;
         }
         div {
+          width: inherit;
+          height: inherit;
           display: flex;
           flex-direction: column;
-          width: 100%;
-          height: 100%;
+          justify-content: flex-end;
+          align-items: center;
         }
         canvas {
-          flex: 1;
           min-height: 0;
-          background-color: #000;
+          width: 100%;
+          flex: 1 1 0%;
+          overflow: hidden;
         }
         audio {
           width: 100%;
+          height: 32px;
+          flex-shrink: 0;
         }
       </style>
       <div>

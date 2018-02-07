@@ -76,19 +76,19 @@ class AudioVisualization extends HTMLElement {
   _requestAnimation() {
     console.log(`${this.id || "(unknown)"}._requestAnimation`);
 
-    this._animationRequestId = window.requestAnimationFrame(this._animationCallback);
+    this._animationRequestId = requestAnimationFrame(this._animationCallback);
   }
 
   _cancelAnimation() {
     console.log(`${this.id || "(unknown)"}._cancelAnimation`);
 
-    window.cancelAnimationFrame(this._animationRequestId);
+    cancelAnimationFrame(this._animationRequestId);
   }
 
   connectedCallback() {
     console.log(`${this.id || "(unknown)"}.connectedCallback`);
 
-    this._requestAnimation();
+    //this._requestAnimation();
   }
 
   disconnectedCallback() {

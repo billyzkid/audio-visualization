@@ -1,6 +1,10 @@
 import AudioVisualization from "./AudioVisualization.js";
 
-customElements.define("audio-visualization", AudioVisualization);
+if (window.customElements) {
+  window.customElements.define("audio-visualization", AudioVisualization);
+}
 
-const adoptedChildren = adoptedLink.import.querySelectorAll("audio-visualization");
-adoptedChildren.forEach((child) => document.body.appendChild(child));
+if (window.adoptedLink) {
+  const adoptedChildren = adoptedLink.import.querySelectorAll("audio-visualization");
+  adoptedChildren.forEach((child) => document.body.appendChild(child));
+}

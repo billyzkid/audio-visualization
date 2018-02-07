@@ -1,4 +1,45 @@
-let audioContext;
+const template = document.createElement("template");
+
+template.innerHTML = `
+  <style>
+    :host {
+      display: inline-block;
+      width: 300px;
+      height: 150px;
+    }
+
+    div {
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      align-items: center;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    span {
+      display: flex;
+    }
+
+    audio {
+      flex: none;
+      width: 100%;
+      order: 1;
+    }
+
+    canvas {
+      flex: auto;
+      width: 100%;
+      min-height: 0;
+    }
+  </style>
+  <div>
+    <audio controls></audio>
+    <canvas></canvas>
+  </div>
+  <span></span>
+`;
 
 class AudioVisualization extends HTMLElement {
   constructor() {
@@ -7,98 +48,53 @@ class AudioVisualization extends HTMLElement {
     console.log(`${this.id || "(unknown)"}.constructor`);
 
     try {
-      this._initializeShadowRoot();
-      this._initializeAudioContext();
-      this._initializeRenderingContext();
+      const shadowNode = template.content.cloneNode(true);
+
+      // Initialize audio
+      const audioElement = shadowNode.querySelector("audio");
+      const audioContext = new AudioContext();
+      const audioSourceNode = audioContext.createMediaElementSource(audioElement);
+      const audioGainNode = audioContext.createGain();
+      const audioAnalyserNode = audioContext.createAnalyser();
+      const audioDestinationNode = audioSourceNode.connect(audioGainNode).connect(audioAnalyserNode).connect(audioContext.destination);
+
+      // Initialize canvas
+      const canvasElement = shadowNode.querySelector("canvas");
+      const canvasContext = canvasElement.getContext("2d");
+
+      this._animationCallback = () => {
+        this._requestAnimation();
+        this.paint();
+      };
+
+      this.attachShadow({ mode: "closed" }).appendChild(shadowNode);
     } catch (error) {
       console.error(error);
     }
   }
 
-  _initializeShadowRoot() {
-    console.log(`${this.id || "(unknown)"}._initializeShadowRoot`);
+  _requestAnimation() {
+    console.log(`${this.id || "(unknown)"}._requestAnimation`);
 
-    this.attachShadow({ mode: "open" });
-
-    this.shadowRoot.innerHTML = `
-      <style>
-        :host {
-          display: inline-block;
-          width: 300px;
-          height: 150px;
-        }
-
-        div {
-          display: flex;
-          flex-direction: column;
-          justify-content: flex-end;
-          align-items: center;
-          width: 100%;
-          height: 100%;
-          overflow: hidden;
-        }
-
-        span {
-          display: flex;
-        }
-
-        canvas {
-          flex: 1;
-          width: 100%;
-          min-height: 0;
-        }
-
-        audio {
-          width: 100%;
-          order: 1;
-        }
-      </style>
-      <div>
-        <canvas></canvas>
-        <audio controls></audio>
-      </div>
-      <span></span>`;
+    this._animationRequestId = window.requestAnimationFrame(this._animationCallback);
   }
 
-  _initializeAudioContext() {
-    console.log(`${this.id || "(unknown)"}._initializeAudioContext`);
+  _cancelAnimation() {
+    console.log(`${this.id || "(unknown)"}._cancelAnimation`);
 
-    if (!audioContext) {
-      audioContext = new AudioContext();
-    }
-
-    this._audioContext = audioContext;
-  }
-
-  _initializeRenderingContext() {
-    console.log(`${this.id || "(unknown)"}._initializeRenderingContext`);
-
-    const canvasElement = this.shadowRoot.querySelector("canvas");
-    this._renderingContext = canvasElement.getContext("2d");
-  }
-
-  _beginRendering() {
-    console.log(`${this.id || "(unknown)"}._beginRendering`);
-
-    //this._renderingRequestId = requestAnimationFrame(() => this._beginRendering());
-  }
-
-  _cancelRendering() {
-    console.log(`${this.id || "(unknown)"}._cancelRendering`);
-
-    cancelAnimationFrame(this._renderingRequestId);
+    window.cancelAnimationFrame(this._animationRequestId);
   }
 
   connectedCallback() {
     console.log(`${this.id || "(unknown)"}.connectedCallback`);
 
-    this._beginRendering();
+    this._requestAnimation();
   }
 
   disconnectedCallback() {
     console.log(`${this.id || "(unknown)"}.disconnectedCallback`);
 
-    this._cancelRendering();
+    this._cancelAnimation();
   }
 
   adoptedCallback() {
@@ -107,6 +103,10 @@ class AudioVisualization extends HTMLElement {
 
   attributeChangedCallback(name, oldValue, newValue) {
     console.log(`${this.id || "(unknown)"}.attributeChangedCallback`, { name, oldValue, newValue });
+  }
+
+  paint() {
+    console.log(`${this.id || "(unknown)"}.paint`);
   }
 }
 

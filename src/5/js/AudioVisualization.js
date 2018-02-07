@@ -3,7 +3,7 @@ let audioContext;
 class AudioVisualization extends HTMLElement {
   constructor() {
     super();
-    console.log("AudioVisualization (ctor)");
+    this._trace("constructor");
 
     try {
       this._initializeShadowRoot();
@@ -14,8 +14,12 @@ class AudioVisualization extends HTMLElement {
     }
   }
 
+  _trace(method, args) {
+    console.log(`${this.id || "(unknown)"}.${method}`, args);
+  }
+
   _initializeShadowRoot() {
-    console.log("AudioVisualization._initializeShadowRoot");
+    this._trace("_initializeShadowRoot");
 
     this.attachShadow({ mode: "open" });
 
@@ -60,7 +64,7 @@ class AudioVisualization extends HTMLElement {
   }
 
   _initializeAudioContext() {
-    console.log("AudioVisualization._initializeAudioContext");
+    this._trace("_initializeAudioContext");
 
     if (!audioContext) {
       audioContext = new AudioContext();
@@ -70,42 +74,42 @@ class AudioVisualization extends HTMLElement {
   }
 
   _initializeRenderingContext() {
-    console.log("AudioVisualization._initializeRenderingContext");
+    this._trace("_initializeRenderingContext");
 
     const canvasElement = this.shadowRoot.querySelector("canvas");
     this._renderingContext = canvasElement.getContext("2d");
   }
 
   _beginRendering() {
-    console.log("AudioVisualization._beginRendering");
+    this._trace("_beginRendering");
 
-    this._renderingRequestId = window.requestAnimationFrame(() => this._beginRendering());
+    //this._renderingRequestId = requestAnimationFrame(() => this._beginRendering());
   }
 
   _cancelRendering() {
-    console.log("AudioVisualization._cancelRendering");
+    this._trace("_cancelRendering");
 
-    window.cancelAnimationFrame(this._renderingRequestId);
+    cancelAnimationFrame(this._renderingRequestId);
   }
 
   connectedCallback() {
-    console.log("AudioVisualization.connectedCallback");
+    this._trace("connectedCallback");
 
     this._beginRendering();
   }
 
   disconnectedCallback() {
-    console.log("AudioVisualization.disconnectedCallback");
+    this._trace("disconnectedCallback");
 
     this._cancelRendering();
   }
 
   adoptedCallback() {
-    console.log("AudioVisualization.adoptedCallback");
+    this._trace("adoptedCallback");
   }
 
   attributeChangedCallback(name, oldValue, newValue) {
-    console.log("AudioVisualization.attributeChangedCallback", { name, oldValue, newValue });
+    this._trace("attributeChangedCallback", { name, oldValue, newValue });
   }
 }
 

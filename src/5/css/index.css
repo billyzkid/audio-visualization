@@ -3,6 +3,7 @@ html.fullscreen {
 }
 
 html.fullscreen body {
+  display: block;
   height: 100%;
   margin: 0;
 }
@@ -11,6 +12,12 @@ html.fullscreen audio, html.fullscreen video, html.fullscreen audio-visualizatio
   display: block;
   width: 100%;
   height: 100%;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
 }
 
 audio {
@@ -23,4 +30,8 @@ video {
 
 audio-visualization {
   background-color: #00f;
+}
+
+audio-visualization.adopted {
+  background-color: #0ff;
 }

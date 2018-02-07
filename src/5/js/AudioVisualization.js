@@ -18,40 +18,45 @@ class AudioVisualization extends HTMLElement {
     console.log("AudioVisualization._initializeShadowRoot");
 
     this.attachShadow({ mode: "open" });
+
     this.shadowRoot.innerHTML = `
       <style>
         :host {
           display: inline-block;
           width: 300px;
           height: 150px;
-          vertical-align: top;
-          background-color: #000;
         }
+
         div {
-          width: inherit;
-          height: inherit;
           display: flex;
           flex-direction: column;
           justify-content: flex-end;
           align-items: center;
-        }
-        canvas {
-          min-height: 0;
           width: 100%;
-          flex: 1 1 0%;
+          height: 100%;
           overflow: hidden;
         }
+
+        span {
+          display: flex;
+        }
+
+        canvas {
+          flex: 1;
+          width: 100%;
+          min-height: 0;
+        }
+
         audio {
           width: 100%;
-          height: 32px;
-          flex-shrink: 0;
+          order: 1;
         }
       </style>
       <div>
         <canvas></canvas>
         <audio controls></audio>
       </div>
-    `;
+      <span></span>`;
   }
 
   _initializeAudioContext() {

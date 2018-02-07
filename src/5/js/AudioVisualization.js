@@ -3,7 +3,8 @@ let audioContext;
 class AudioVisualization extends HTMLElement {
   constructor() {
     super();
-    this._trace("constructor");
+
+    console.log(`${this.id || "(unknown)"}.constructor`);
 
     try {
       this._initializeShadowRoot();
@@ -14,12 +15,8 @@ class AudioVisualization extends HTMLElement {
     }
   }
 
-  _trace(method, args) {
-    console.log(`${this.id || "(unknown)"}.${method}`, args);
-  }
-
   _initializeShadowRoot() {
-    this._trace("_initializeShadowRoot");
+    console.log(`${this.id || "(unknown)"}._initializeShadowRoot`);
 
     this.attachShadow({ mode: "open" });
 
@@ -64,7 +61,7 @@ class AudioVisualization extends HTMLElement {
   }
 
   _initializeAudioContext() {
-    this._trace("_initializeAudioContext");
+    console.log(`${this.id || "(unknown)"}._initializeAudioContext`);
 
     if (!audioContext) {
       audioContext = new AudioContext();
@@ -74,42 +71,42 @@ class AudioVisualization extends HTMLElement {
   }
 
   _initializeRenderingContext() {
-    this._trace("_initializeRenderingContext");
+    console.log(`${this.id || "(unknown)"}._initializeRenderingContext`);
 
     const canvasElement = this.shadowRoot.querySelector("canvas");
     this._renderingContext = canvasElement.getContext("2d");
   }
 
   _beginRendering() {
-    this._trace("_beginRendering");
+    console.log(`${this.id || "(unknown)"}._beginRendering`);
 
     //this._renderingRequestId = requestAnimationFrame(() => this._beginRendering());
   }
 
   _cancelRendering() {
-    this._trace("_cancelRendering");
+    console.log(`${this.id || "(unknown)"}._cancelRendering`);
 
     cancelAnimationFrame(this._renderingRequestId);
   }
 
   connectedCallback() {
-    this._trace("connectedCallback");
+    console.log(`${this.id || "(unknown)"}.connectedCallback`);
 
     this._beginRendering();
   }
 
   disconnectedCallback() {
-    this._trace("disconnectedCallback");
+    console.log(`${this.id || "(unknown)"}.disconnectedCallback`);
 
     this._cancelRendering();
   }
 
   adoptedCallback() {
-    this._trace("adoptedCallback");
+    console.log(`${this.id || "(unknown)"}.adoptedCallback`);
   }
 
   attributeChangedCallback(name, oldValue, newValue) {
-    this._trace("attributeChangedCallback", { name, oldValue, newValue });
+    console.log(`${this.id || "(unknown)"}.attributeChangedCallback`, { name, oldValue, newValue });
   }
 }
 

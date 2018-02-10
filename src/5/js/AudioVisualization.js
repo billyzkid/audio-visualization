@@ -153,14 +153,14 @@ class AudioVisualization extends HTMLElement {
     const audioElement = shadowNode.querySelector("audio");
     const canvasElement = shadowNode.querySelector("canvas");
 
-    const audioEventHandler = (event) => this._dispatchAudioEvent(event);
-    audioEvents.forEach((name) => audioElement[`on${name}`] = audioEventHandler);
-
     const audioContext = new AudioContext();
     const audioSourceNode = audioContext.createMediaElementSource(audioElement);
     const audioGainNode = audioContext.createGain();
     const audioAnalyserNode = audioContext.createAnalyser();
     const audioDestinationNode = audioSourceNode.connect(audioGainNode).connect(audioAnalyserNode).connect(audioContext.destination);
+
+    const audioEventHandler = (event) => this._dispatchAudioEvent(event);
+    audioEvents.forEach((name) => audioElement[`on${name}`] = audioEventHandler);
 
     this._audioElement = audioElement;
     this._canvasContext = canvasElement.getContext("2d");
@@ -276,11 +276,13 @@ class AudioVisualization extends HTMLElement {
 
   connectedCallback() {
     console.log(`${this.id || "(unknown)"}.connectedCallback`);
+
     //this._requestAnimation();
   }
 
   disconnectedCallback() {
     console.log(`${this.id || "(unknown)"}.disconnectedCallback`);
+
     this._cancelAnimation();
   }
 
@@ -304,16 +306,19 @@ class AudioVisualization extends HTMLElement {
 
   _requestAnimation() {
     console.log(`${this.id || "(unknown)"}._requestAnimation`);
+
     this._animationRequestId = requestAnimationFrame(this._animationCallback);
   }
 
   _cancelAnimation() {
     console.log(`${this.id || "(unknown)"}._cancelAnimation`);
+
     cancelAnimationFrame(this._animationRequestId);
   }
 
   _dispatchAudioEvent(event) {
     console.log(`${this.id || "(unknown)"}._dispatchAudioEvent`, [event]);
+
     this.dispatchEvent(new Event(event.type, event));
   }
 }

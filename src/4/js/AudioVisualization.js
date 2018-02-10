@@ -79,30 +79,6 @@ class AudioVisualization extends HTMLElement {
 
   //#region Properties
 
-  // audioTracks
-  // buffered
-  // crossOrigin
-  // currentSrc
-  // defaultPlaybackRate
-  // mediaKeys
-  // msAudioCategory
-  // msAudioDeviceType
-  // msGraphicsTrustStatus
-  // msKeys
-  // msPlayToDisabled
-  // msPlayToPreferredSourceUri
-  // msPlayToPrimary
-  // msPlayToSource
-  // msRealTime
-  // networkState
-  // playbackRate
-  // played
-  // readyState
-  // seekable
-  // srcObject
-  // textTracks
-  // videoTracks
-
   get autoplay() {
     console.log("AudioVisualization.autoplay (get)");
 
@@ -261,17 +237,6 @@ class AudioVisualization extends HTMLElement {
 
   //#region Methods
 
-  // addTextTrack
-  // canPlayType
-  // msClearEffects
-  // msGetAsCastingSource
-  // msInsertAudioEffect
-  // msSetMediaKeys
-  // msSetMediaProtectionManager
-  // setMediaKeys
-  // onencrypted
-  // onmsneedkey
-
   load() {
     console.log("AudioVisualization.load");
 
@@ -337,29 +302,6 @@ class AudioVisualization extends HTMLElement {
 
   letsDraw() {
     console.log("AudioVisualization.letsDraw");
-
-    // window.requestAnimationFrame(() => this.letsDraw());
-    // fbc_array = new Uint8Array(analyser.frequencyBinCount);
-    // analyser.getByteFrequencyData(fbc_array); //get frequency from the analyser node
-    // ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    // ctx.fillStyle = "white";
-    // ctx.font = "bold 12px Arial";
-    // ctx.fillText("currently playing:" + trackName, 10, 20);//this works
-
-    // bars = 150;
-    // for (var i = 0; i < analyser.frequencyBinCount; i++) { //but this doesn't
-    //   /*fill the canvas*/
-    //   x = i * 2;
-    //   barWidth = 1;
-    //   barHeight = -(fbc_array[i] / 1.8);
-
-    //   //colours react to the  frequency loudness
-    //   hue = parseInt(500 * (1 - (barHeight / 200)), 10);
-    //   ctx.fillStyle = 'hsl(' + hue + ',75%,50%)';
-
-    //   ctx.fillRect(x, canvas.height, barWidth, barHeight);
-    // }
   }
 
   //#endregion

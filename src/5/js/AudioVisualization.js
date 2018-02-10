@@ -166,8 +166,8 @@ class AudioVisualization extends HTMLElement {
     this._canvasContext = canvasElement.getContext("2d");
     this._animationCallback = () => { this._requestAnimation(); this.paint(); };
 
-    this.attachShadow({ mode: "open" });
-    this.shadowRoot.appendChild(shadowNode);
+    const shadowRoot = this.attachShadow({ mode: "closed" });
+    shadowRoot.appendChild(shadowNode);
   }
 
   static get observedAttributes() {

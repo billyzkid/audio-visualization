@@ -35,7 +35,9 @@ template.innerHTML = `
     }
   </style>
   <div>
-    <audio controls></audio>
+    <audio controls>
+      <slot></slot>
+    </audio>
     <canvas></canvas>
   </div>
   <span></span>
@@ -47,30 +49,28 @@ class AudioVisualization extends HTMLElement {
 
     //console.log(`${this.id || "(unknown)"}.constructor`);
 
-    try {
-      const shadowNode = template.content.cloneNode(true);
+    const shadowNode = template.content.cloneNode(true);
 
-      // Initialize audio
-      const audioContext = new AudioContext();
-      const audioElement = this.audioElement = shadowNode.querySelector("audio");
-      const audioSourceNode = audioContext.createMediaElementSource(audioElement);
-      const audioGainNode = audioContext.createGain();
-      const audioAnalyserNode = audioContext.createAnalyser();
-      const audioDestinationNode = audioSourceNode.connect(audioGainNode).connect(audioAnalyserNode).connect(audioContext.destination);
+    // Initialize audio
+    const audioContext = new AudioContext();
+    const audioElement = this.audioElement = shadowNode.querySelector("audio");
+    const audioSourceNode = audioContext.createMediaElementSource(audioElement);
+    const audioGainNode = audioContext.createGain();
+    const audioAnalyserNode = audioContext.createAnalyser();
+    const audioDestinationNode = audioSourceNode.connect(audioGainNode).connect(audioAnalyserNode).connect(audioContext.destination);
 
-      // Initialize canvas
-      const canvasElement = shadowNode.querySelector("canvas");
-      const canvasContext = canvasElement.getContext("2d");
+    // Initialize canvas
+    const canvasElement = shadowNode.querySelector("canvas");
+    const canvasContext = canvasElement.getContext("2d");
 
-      this._animationCallback = () => {
-        this._requestAnimation();
-        this.paint();
-      };
+    this._animationCallback = () => {
+      this._requestAnimation();
+      this.paint();
+    };
 
-      this.attachShadow({ mode: "closed" }).appendChild(shadowNode);
-    } catch (error) {
-      console.error(error);
-    }
+    // Initialize shadow root
+    this.attachShadow({ mode: "open" });
+    this.shadowRoot.appendChild(shadowNode);
   }
 
   _requestAnimation() {
@@ -169,7 +169,7 @@ console.log("methods", Object.keys(methodDescriptors).sort());
 console.log("writable properties", Object.keys(writablePropertyDescriptors).sort());
 console.log("readonly properties", Object.keys(readonlyPropertyDescriptors).sort());
 
-const events = [
+const events =  [
   "onabort",
   "oncanplay",
   "oncanplaythrough",
@@ -197,7 +197,7 @@ const events = [
   "onwaitingforkey"
 ];
 
-const methods = [
+const methods =  [
   "addTextTrack",
   "canPlayType",
   "captureStream",
@@ -208,7 +208,7 @@ const methods = [
   "setSinkId"
 ];
 
-const attributes = [
+const attributes =  [
   "autoplay",
   "controls",
   "crossOrigin",
@@ -218,7 +218,7 @@ const attributes = [
   "src"
 ];
 
-const writableProperties = [
+const writableProperties =  [
   "autoplay",
   "controls",
   "controlsList",
@@ -236,7 +236,7 @@ const writableProperties = [
   "volume"
 ];
 
-const readonlyProperties = [
+const readonlyProperties =  [
   "buffered",
   "currentSrc",
   "duration",

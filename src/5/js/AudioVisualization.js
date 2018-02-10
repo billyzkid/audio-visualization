@@ -171,6 +171,106 @@ class AudioVisualization extends HTMLElement {
     return audioAttributes;
   }
 
+  get autoplay() {
+    console.log(`${this.id || "(unknown)"}.autoplay (get)`);
+
+    return this.hasAttribute("autoplay");
+  }
+
+  set autoplay(value) {
+    console.log(`${this.id || "(unknown)"}.autoplay (set)`, [value]);
+
+    if (value) {
+      this.setAttribute("autoplay", "");
+    } else {
+      this.removeAttribute("autoplay");
+    }
+  }
+
+  get controls() {
+    console.log(`${this.id || "(unknown)"}.controls (get)`);
+
+    return this.hasAttribute("controls");
+  }
+
+  set controls(value) {
+    console.log(`${this.id || "(unknown)"}.controls (set)`, [value]);
+
+    if (value) {
+      this.setAttribute("controls", "");
+    } else {
+      this.removeAttribute("controls");
+    }
+  }
+
+  get crossOrigin() {
+    console.log(`${this.id || "(unknown)"}.crossOrigin (get)`);
+
+    return this.getAttribute("crossorigin");
+  }
+
+  set crossOrigin(value) {
+    console.log(`${this.id || "(unknown)"}.crossOrigin (set)`, [value]);
+
+    this.setAttribute("crossorigin", value);
+  }
+
+  get defaultMuted() {
+    console.log(`${this.id || "(unknown)"}.defaultMuted (get)`);
+
+    return this.hasAttribute("muted");
+  }
+
+  set defaultMuted(value) {
+    console.log(`${this.id || "(unknown)"}.defaultMuted (set)`, [value]);
+
+    if (value) {
+      this.setAttribute("muted", "");
+    } else {
+      this.removeAttribute("muted");
+    }
+  }
+
+  get loop() {
+    console.log(`${this.id || "(unknown)"}.loop (get)`);
+
+    return this.hasAttribute("loop");
+  }
+
+  set loop(value) {
+    console.log(`${this.id || "(unknown)"}.loop (set)`, [value]);
+
+    if (value) {
+      this.setAttribute("loop", "");
+    } else {
+      this.removeAttribute("loop");
+    }
+  }
+
+  get preload() {
+    console.log(`${this.id || "(unknown)"}.preload (get)`);
+
+    return this.getAttribute("preload");
+  }
+
+  set preload(value) {
+    console.log(`${this.id || "(unknown)"}.preload (set)`, [value]);
+
+    this.setAttribute("preload", value);
+  }
+
+  get src() {
+    console.log(`${this.id || "(unknown)"}.src (get)`);
+
+    return this.getAttribute("src");
+  }
+
+  set src(value) {
+    console.log(`${this.id || "(unknown)"}.src (set)`, [value]);
+
+    this.setAttribute("src", value);
+  }
+
   connectedCallback() {
     console.log(`${this.id || "(unknown)"}.connectedCallback`);
 
@@ -235,7 +335,7 @@ audioMethods.forEach((name) => {
 // Copy properties to prototype
 Object.keys(audioProperties).forEach((name) => {
   const get = function () { console.log(`${this.id || "(unknown)"}.${name} (get)`); return this._audioElement[name]; };
-  const set = (!audioProperties[name].readOnly) ? function (value) { console.log(`${this.id || "(unknown)"}.${name} (set)`, value); this._audioElement[name] = value; } : undefined;
+  const set = (!audioProperties[name].readOnly) ? function (value) { console.log(`${this.id || "(unknown)"}.${name} (set)`, [value]); this._audioElement[name] = value; } : undefined;
   Object.defineProperty(AudioVisualization.prototype, name, { get, set, enumerable: false, configurable: true });
 });
 

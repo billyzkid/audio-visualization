@@ -1,5 +1,102 @@
-const template = document.createElement("template");
+const audioConstants = [
+  "HAVE_CURRENT_DATA",
+  "HAVE_ENOUGH_DATA",
+  "HAVE_FUTURE_DATA",
+  "HAVE_METADATA",
+  "HAVE_NOTHING",
+  "NETWORK_EMPTY",
+  "NETWORK_IDLE",
+  "NETWORK_LOADING",
+  "NETWORK_NO_SOURCE"
+]
 
+const audioMethods = [
+  "addTextTrack",
+  "canPlayType",
+  "captureStream",
+  "load",
+  "pause",
+  "play",
+  "setMediaKeys",
+  "setSinkId"
+];
+
+const audioProperties = {
+  "autoplay": { readOnly: false },
+  "buffered": { readOnly: true },
+  "controls": { readOnly: false },
+  "controlsList": { readOnly: false },
+  "crossOrigin": { readOnly: false },
+  "currentSrc": { readOnly: true },
+  "currentTime": { readOnly: false },
+  "defaultMuted": { readOnly: false },
+  "defaultPlaybackRate": { readOnly: false },
+  "disableRemotePlayback": { readOnly: false },
+  "duration": { readOnly: true },
+  "ended": { readOnly: true },
+  "error": { readOnly: true },
+  "loop": { readOnly: false },
+  "mediaKeys": { readOnly: true },
+  "muted": { readOnly: false },
+  "networkState": { readOnly: true },
+  "onencrypted": { readOnly: false },
+  "onwaitingforkey": { readOnly: false },
+  "paused": { readOnly: true },
+  "playbackRate": { readOnly: false },
+  "played": { readOnly: true },
+  "preload": { readOnly: false },
+  "readyState": { readOnly: true },
+  "remote": { readOnly: true },
+  "seekable": { readOnly: true },
+  "seeking": { readOnly: true },
+  "sinkId": { readOnly: true },
+  "src": { readOnly: false },
+  "srcObject": { readOnly: false },
+  "textTracks": { readOnly: true },
+  "volume": { readOnly: false },
+  "webkitAudioDecodedByteCount": { readOnly: true },
+  "webkitVideoDecodedByteCount": { readOnly: true }
+};
+
+const audioAttributes = [
+  "autoplay",
+  "controls",
+  "crossorigin",
+  "loop",
+  "muted",
+  "preload",
+  "src"
+];
+
+const audioEvents = [
+  "abort",
+  "canplay",
+  "canplaythrough",
+  "cuechange",
+  "durationchange",
+  "emptied",
+  "encrypted",
+  "ended",
+  "error",
+  "loadeddata",
+  "loadedmetadata",
+  "loadstart",
+  "pause",
+  "play",
+  "playing",
+  "progress",
+  "ratechange",
+  "seeked",
+  "seeking",
+  "stalled",
+  "suspend",
+  "timeupdate",
+  "volumechange",
+  "waiting",
+  "waitingforkey"
+];
+
+const template = document.createElement("template");
 template.innerHTML = `
   <style>
     :host {
@@ -110,150 +207,39 @@ class AudioVisualization extends HTMLElement {
   }
 }
 
-// for (const name of methodNames) {
-//   AudioVisualization.prototype[name] = function (...args) {
-//     console.log(`${this.id || "(unknown)"}.${name}`, args);
-//     return this.audioElement[name](...args);
-//   };
-// }
+// Copy constants to prototype
+audioConstants.forEach((name) => {
+  const value = HTMLAudioElement.prototype[name];
+  Object.defineProperty(AudioVisualization.prototype, name, { value, writable: false, enumerable: true, configurable: false });
+});
 
-// for (const name of methodNames) {
-//   const value = new Function("...args", `console.log(\`$\{this.id || "(unknown)"\}.${name}\`, args); return this.audioElement.${name}(...args);`);
-//   Object.defineProperty(AudioVisualization.prototype, name, { value, writable: true, enumerable: false, configurable: true });
-// }
+// Copy methods to prototype
+audioMethods.forEach((name) => {
+  const value = function (...args) { console.log(`${this.id || "(unknown)"}.${name}`, args); return this.audioElement[name](...args); };
+  Object.defineProperty(AudioVisualization.prototype, name, { value, writable: true, enumerable: false, configurable: true });
+});
 
-// for (const name of methodNames) {
-//   const value = function (...args) {
-//     console.log(`${this.id || "(unknown)"}.${name}`, args);
-//     return this.audioElement[name](...args);
-//   };
-//   Object.defineProperty(AudioVisualization.prototype, name, { value, writable: true, enumerable: false, configurable: true });
-// }
+// Copy properties to prototype
+Object.keys(audioProperties).forEach((name) => {
+  const get = function () { console.log(`${this.id || "(unknown)"}.${name} (get)`); return this.audioElement[name]; };
+  const set = (!audioProperties[name].readOnly) ? function (value) { console.log(`${this.id || "(unknown)"}.${name} (set)`, value); this.audioElement[name] = value; } : undefined;
+  Object.defineProperty(AudioVisualization.prototype, name, { get, set, enumerable: false, configurable: true });
+});
 
-// for (const name of methodNames) {
-//   Object.defineProperty(AudioVisualization.prototype, name, {
-//     writable: true,
-//     enumerable: false,
-//     configurable: true,
-//     value: function (...args) {
-//       console.log(`${this.id || "(unknown)"}.${name}`, args);
-//       return this.audioElement[name](...args);
-//     }
-//   });
-// }
-
-// for (const name of methodNames) {
-//   Object.assign(AudioVisualization.prototype, {
-//     [name]: function (...args) {
-//       console.log(`${this.id || "(unknown)"}.${name}`, args);
-//       return this.audioElement[name](...args);
-//     }
-//   });
-// }
 
 function getDescriptors(...args) {
-  return args.reduce((obj, arg) => Object.assign(obj, Object.getOwnPropertyNames(arg).map((name) => ({ name, descriptor: Object.getOwnPropertyDescriptor(arg, name) })).filter((obj) => obj.descriptor.enumerable).reduce((acc, obj) => Object.assign(acc, { [obj.name]: obj.descriptor }), {})), {});
+  return args.reduce((obj1, arg) => Object.assign(obj1, Object.getOwnPropertyNames(arg).reduce((obj2, name) => Object.assign(obj2, { [name]: Object.getOwnPropertyDescriptor(arg, name) }), {})), {});
 }
 
-const allDescriptors = getDescriptors(HTMLElement.prototype, HTMLMediaElement.prototype, HTMLAudioElement.prototype);
-const mediaDescriptors = getDescriptors(HTMLMediaElement.prototype, HTMLAudioElement.prototype);
-const eventDescriptors = Object.keys(allDescriptors).filter((key) => key.startsWith("on")).reduce((obj, key) => Object.assign(obj, { [key]: allDescriptors[key] }), {});
-const methodDescriptors = Object.keys(mediaDescriptors).filter((key) => !key.startsWith("on") && typeof mediaDescriptors[key].value == "function").reduce((obj, key) => Object.assign(obj, { [key]: mediaDescriptors[key] }), {});
-const writablePropertyDescriptors = Object.keys(mediaDescriptors).filter((key) => !key.startsWith("on") && typeof mediaDescriptors[key].get == "function" && typeof mediaDescriptors[key].set == "function").reduce((obj, key) => Object.assign(obj, { [key]: mediaDescriptors[key] }), {});
-const readonlyPropertyDescriptors = Object.keys(mediaDescriptors).filter((key) => !key.startsWith("on") && typeof mediaDescriptors[key].get == "function" && typeof mediaDescriptors[key].set == "undefined").reduce((obj, key) => Object.assign(obj, { [key]: mediaDescriptors[key] }), {});
+const audioDescriptors = getDescriptors(HTMLMediaElement.prototype, HTMLAudioElement.prototype);
+const audioDescriptorKeys = Object.keys(audioDescriptors);
+const audioVisualizationDescriptors = getDescriptors(AudioVisualization.prototype);
+const audioVisualizationKeys = Object.keys(audioVisualizationDescriptors);
+const missingKeys = audioDescriptorKeys.filter((key) => audioVisualizationKeys.indexOf(key) === -1).sort();
+const missingDescriptors = missingKeys.map((key) => ({ [key]: audioDescriptors[key] })).reduce((obj, descriptor) => Object.assign(obj, descriptor), {});
 
-console.log("all descriptors", allDescriptors);
-console.log("media descriptors", mediaDescriptors);
-console.log("events", Object.keys(eventDescriptors).sort());
-console.log("methods", Object.keys(methodDescriptors).sort());
-console.log("writable properties", Object.keys(writablePropertyDescriptors).sort());
-console.log("readonly properties", Object.keys(readonlyPropertyDescriptors).sort());
-
-const events =  [
-  "onabort",
-  "oncanplay",
-  "oncanplaythrough",
-  "oncuechange",
-  "ondurationchange",
-  "onemptied",
-  "onencrypted",
-  "onended",
-  "onerror",
-  "onloadeddata",
-  "onloadedmetadata",
-  "onloadstart",
-  "onpause",
-  "onplay",
-  "onplaying",
-  "onprogress",
-  "onratechange",
-  "onseeked",
-  "onseeking",
-  "onstalled",
-  "onsuspend",
-  "ontimeupdate",
-  "onvolumechange",
-  "onwaiting",
-  "onwaitingforkey"
-];
-
-const methods =  [
-  "addTextTrack",
-  "canPlayType",
-  "captureStream",
-  "load",
-  "pause",
-  "play",
-  "setMediaKeys",
-  "setSinkId"
-];
-
-const attributes =  [
-  "autoplay",
-  "controls",
-  "crossOrigin",
-  "loop",
-  "muted",
-  "preload",
-  "src"
-];
-
-const writableProperties =  [
-  "autoplay",
-  "controls",
-  "controlsList",
-  "crossOrigin",
-  "currentTime",
-  "defaultMuted",
-  "defaultPlaybackRate",
-  "disableRemotePlayback",
-  "loop",
-  "muted",
-  "playbackRate",
-  "preload",
-  "src",
-  "srcObject",
-  "volume"
-];
-
-const readonlyProperties =  [
-  "buffered",
-  "currentSrc",
-  "duration",
-  "ended",
-  "error",
-  "mediaKeys",
-  "networkState",
-  "paused",
-  "played",
-  "readyState",
-  "remote",
-  "seekable",
-  "seeking",
-  "sinkId",
-  "textTracks",
-  "webkitAudioDecodedByteCount",
-  "webkitVideoDecodedByteCount"
-];
+console.log("audio descriptors", audioDescriptors);
+console.log("audio visualization descriptors", audioVisualizationDescriptors);
+console.log("missing descriptors", missingDescriptors);
 
 export default AudioVisualization;

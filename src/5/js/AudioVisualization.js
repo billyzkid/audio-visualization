@@ -21,42 +21,45 @@ const audioMethods = [
   "setSinkId"
 ];
 
-const audioProperties = {
-  "autoplay": { readOnly: false },
-  "buffered": { readOnly: true },
-  "controls": { readOnly: false },
-  "controlsList": { readOnly: false },
-  "crossOrigin": { readOnly: false },
-  "currentSrc": { readOnly: true },
-  "currentTime": { readOnly: false },
-  "defaultMuted": { readOnly: false },
-  "defaultPlaybackRate": { readOnly: false },
-  "disableRemotePlayback": { readOnly: false },
-  "duration": { readOnly: true },
-  "ended": { readOnly: true },
-  "error": { readOnly: true },
-  "loop": { readOnly: false },
-  "mediaKeys": { readOnly: true },
-  "muted": { readOnly: false },
-  "networkState": { readOnly: true },
-  "onencrypted": { readOnly: false },
-  "onwaitingforkey": { readOnly: false },
-  "paused": { readOnly: true },
-  "playbackRate": { readOnly: false },
-  "played": { readOnly: true },
-  "preload": { readOnly: false },
-  "readyState": { readOnly: true },
-  "remote": { readOnly: true },
-  "seekable": { readOnly: true },
-  "seeking": { readOnly: true },
-  "sinkId": { readOnly: true },
-  "src": { readOnly: false },
-  "srcObject": { readOnly: false },
-  "textTracks": { readOnly: true },
-  "volume": { readOnly: false },
-  "webkitAudioDecodedByteCount": { readOnly: true },
-  "webkitVideoDecodedByteCount": { readOnly: true }
-};
+const audioPropertiesWritable = [
+  "autoplay",
+  "controls",
+  "controlsList",
+  "crossOrigin",
+  "currentTime",
+  "defaultMuted",
+  "defaultPlaybackRate",
+  "disableRemotePlayback",
+  "loop",
+  "muted",
+  "onencrypted",
+  "onwaitingforkey",
+  "playbackRate",
+  "preload",
+  "src",
+  "srcObject",
+  "volume"
+];
+
+const audioPropertiesReadonly = [
+  "buffered",
+  "currentSrc",
+  "duration",
+  "ended",
+  "error",
+  "mediaKeys",
+  "networkState",
+  "paused",
+  "played",
+  "readyState",
+  "remote",
+  "seekable",
+  "seeking",
+  "sinkId",
+  "textTracks",
+  "webkitAudioDecodedByteCount",
+  "webkitVideoDecodedByteCount"
+];
 
 const audioAttributes = [
   "autoplay",
@@ -273,13 +276,11 @@ class AudioVisualization extends HTMLElement {
 
   connectedCallback() {
     console.log(`${this.id || "(unknown)"}.connectedCallback`);
-
     //this._requestAnimation();
   }
 
   disconnectedCallback() {
     console.log(`${this.id || "(unknown)"}.disconnectedCallback`);
-
     this._cancelAnimation();
   }
 
@@ -303,40 +304,43 @@ class AudioVisualization extends HTMLElement {
 
   _requestAnimation() {
     console.log(`${this.id || "(unknown)"}._requestAnimation`);
-
     this._animationRequestId = requestAnimationFrame(this._animationCallback);
   }
 
   _cancelAnimation() {
     console.log(`${this.id || "(unknown)"}._cancelAnimation`);
-
     cancelAnimationFrame(this._animationRequestId);
   }
 
   _dispatchAudioEvent(event) {
     console.log(`${this.id || "(unknown)"}._dispatchAudioEvent`, [event]);
-
     this.dispatchEvent(new Event(event.type, event));
   }
 }
 
-// Copy constants to prototype
-audioConstants.forEach((name) => {
+// Copy audio constants to AudioVisualization prototype
+audioConstants.filter((name) => !AudioVisualization.prototype.hasOwnProperty(name)).forEach((name) => {
   const value = HTMLAudioElement.prototype[name];
   Object.defineProperty(AudioVisualization.prototype, name, { value, writable: false, enumerable: false, configurable: false });
 });
 
-// Copy methods to prototype
-audioMethods.forEach((name) => {
+// Copy audio methods to AudioVisualization prototype
+audioMethods.filter((name) => !AudioVisualization.prototype.hasOwnProperty(name)).forEach((name) => {
   const value = function (...args) { console.log(`${this.id || "(unknown)"}.${name}`, args); return this._audioElement[name](...args); };
   Object.defineProperty(AudioVisualization.prototype, name, { value, writable: true, enumerable: false, configurable: true });
 });
 
-// Copy properties to prototype
-Object.keys(audioProperties).forEach((name) => {
+// Copy writable audio properties to AudioVisualization prototype
+audioPropertiesWritable.filter((name) => !AudioVisualization.prototype.hasOwnProperty(name)).forEach((name) => {
   const get = function () { console.log(`${this.id || "(unknown)"}.${name} (get)`); return this._audioElement[name]; };
-  const set = (!audioProperties[name].readOnly) ? function (value) { console.log(`${this.id || "(unknown)"}.${name} (set)`, [value]); this._audioElement[name] = value; } : undefined;
+  const set = function (value) { console.log(`${this.id || "(unknown)"}.${name} (set)`, [value]); this._audioElement[name] = value; };
   Object.defineProperty(AudioVisualization.prototype, name, { get, set, enumerable: false, configurable: true });
+});
+
+// Copy readonly audio properties to AudioVisualization prototype
+audioPropertiesReadonly.filter((name) => !AudioVisualization.prototype.hasOwnProperty(name)).forEach((name) => {
+  const get = function () { console.log(`${this.id || "(unknown)"}.${name} (get)`); return this._audioElement[name]; };
+  Object.defineProperty(AudioVisualization.prototype, name, { get, enumerable: false, configurable: true });
 });
 
 export default AudioVisualization;

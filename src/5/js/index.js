@@ -1,7 +1,9 @@
 import AudioVisualization from "./AudioVisualization.js";
 
 customElements.define("audio-visualization", AudioVisualization);
-adoptedLink.import.querySelectorAll("audio-visualization").forEach((child) => document.body.appendChild(child));
+
+// const adoptedChildren = adoptedLink.import.querySelectorAll("audio-visualization");
+// adoptedChildren.forEach((child) => document.body.appendChild(child));
 
 // function getDescriptors(...args) {
 //   return args.reduce((obj1, arg) => Object.assign(obj1, Object.getOwnPropertyNames(arg).reduce((obj2, name) => Object.assign(obj2, { [name]: Object.getOwnPropertyDescriptor(arg, name) }), {})), {});

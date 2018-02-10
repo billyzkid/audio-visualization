@@ -132,7 +132,7 @@ template.innerHTML = `
     }
   </style>
   <div>
-    <audio controls>
+    <audio>
       <slot></slot>
     </audio>
     <canvas></canvas>
@@ -188,7 +188,13 @@ class AudioVisualization extends HTMLElement {
   }
 
   attributeChangedCallback(name, oldValue, newValue) {
-    console.log(`${this.id || "(unknown)"}.attributeChangedCallback`, name, oldValue, newValue);
+    console.log(`${this.id || "(unknown)"}.attributeChangedCallback`, [name, oldValue, newValue]);
+
+    if (newValue !== null) {
+      this._audioElement.setAttribute(name, newValue);
+    } else {
+      this._audioElement.removeAttribute(name);
+    }
   }
 
   paint() {
@@ -208,7 +214,7 @@ class AudioVisualization extends HTMLElement {
   }
 
   _dispatchAudioEvent(event) {
-    console.log(`${this.id || "(unknown)"}._dispatchAudioEvent`, event);
+    console.log(`${this.id || "(unknown)"}._dispatchAudioEvent`, [event]);
 
     this.dispatchEvent(new Event(event.type, event));
   }

@@ -144,102 +144,93 @@ class AudioVisualization extends HTMLElement {
   constructor() {
     super();
 
-    //console.log(`${this.id || "(unknown)"}.constructor`);
+    console.log(`${this.id || "(unknown)"}.constructor`);
 
     const shadowNode = template.content.cloneNode(true);
+    const audioElement = shadowNode.querySelector("audio");
+    const canvasElement = shadowNode.querySelector("canvas");
 
-    // Initialize audio
+    const audioEventHandler = (event) => this._dispatchAudioEvent(event);
+    audioEvents.forEach((name) => audioElement[`on${name}`] = audioEventHandler);
+
     const audioContext = new AudioContext();
-    const audioElement = this.audioElement = shadowNode.querySelector("audio");
     const audioSourceNode = audioContext.createMediaElementSource(audioElement);
     const audioGainNode = audioContext.createGain();
     const audioAnalyserNode = audioContext.createAnalyser();
     const audioDestinationNode = audioSourceNode.connect(audioGainNode).connect(audioAnalyserNode).connect(audioContext.destination);
 
-    // Initialize canvas
-    const canvasElement = shadowNode.querySelector("canvas");
-    const canvasContext = canvasElement.getContext("2d");
+    this._audioElement = audioElement;
+    this._canvasContext = canvasElement.getContext("2d");
+    this._animationCallback = () => { this._requestAnimation(); this.paint(); };
 
-    this._animationCallback = () => {
-      this._requestAnimation();
-      this.paint();
-    };
-
-    // Initialize shadow root
     this.attachShadow({ mode: "open" });
     this.shadowRoot.appendChild(shadowNode);
   }
 
-  _requestAnimation() {
-    //console.log(`${this.id || "(unknown)"}._requestAnimation`);
-
-    this._animationRequestId = requestAnimationFrame(this._animationCallback);
-  }
-
-  _cancelAnimation() {
-    //console.log(`${this.id || "(unknown)"}._cancelAnimation`);
-
-    cancelAnimationFrame(this._animationRequestId);
+  static get observedAttributes() {
+    return audioAttributes;
   }
 
   connectedCallback() {
-    //console.log(`${this.id || "(unknown)"}.connectedCallback`);
+    console.log(`${this.id || "(unknown)"}.connectedCallback`);
 
-    this._requestAnimation();
+    //this._requestAnimation();
   }
 
   disconnectedCallback() {
-    //console.log(`${this.id || "(unknown)"}.disconnectedCallback`);
+    console.log(`${this.id || "(unknown)"}.disconnectedCallback`);
 
     this._cancelAnimation();
   }
 
   adoptedCallback() {
-    //console.log(`${this.id || "(unknown)"}.adoptedCallback`);
+    console.log(`${this.id || "(unknown)"}.adoptedCallback`);
   }
 
   attributeChangedCallback(name, oldValue, newValue) {
-    //console.log(`${this.id || "(unknown)"}.attributeChangedCallback`, { name, oldValue, newValue });
+    console.log(`${this.id || "(unknown)"}.attributeChangedCallback`, name, oldValue, newValue);
   }
 
   paint() {
-    //console.log(`${this.id || "(unknown)"}.paint`);
+    console.log(`${this.id || "(unknown)"}.paint`);
+  }
+
+  _requestAnimation() {
+    console.log(`${this.id || "(unknown)"}._requestAnimation`);
+
+    this._animationRequestId = requestAnimationFrame(this._animationCallback);
+  }
+
+  _cancelAnimation() {
+    console.log(`${this.id || "(unknown)"}._cancelAnimation`);
+
+    cancelAnimationFrame(this._animationRequestId);
+  }
+
+  _dispatchAudioEvent(event) {
+    console.log(`${this.id || "(unknown)"}._dispatchAudioEvent`, event);
+
+    this.dispatchEvent(new Event(event.type, event));
   }
 }
 
 // Copy constants to prototype
 audioConstants.forEach((name) => {
   const value = HTMLAudioElement.prototype[name];
-  Object.defineProperty(AudioVisualization.prototype, name, { value, writable: false, enumerable: true, configurable: false });
+  Object.defineProperty(AudioVisualization.prototype, name, { value, writable: false, enumerable: false, configurable: false });
 });
 
 // Copy methods to prototype
 audioMethods.forEach((name) => {
-  const value = function (...args) { console.log(`${this.id || "(unknown)"}.${name}`, args); return this.audioElement[name](...args); };
+  const value = function (...args) { console.log(`${this.id || "(unknown)"}.${name}`, args); return this._audioElement[name](...args); };
   Object.defineProperty(AudioVisualization.prototype, name, { value, writable: true, enumerable: false, configurable: true });
 });
 
 // Copy properties to prototype
 Object.keys(audioProperties).forEach((name) => {
-  const get = function () { console.log(`${this.id || "(unknown)"}.${name} (get)`); return this.audioElement[name]; };
-  const set = (!audioProperties[name].readOnly) ? function (value) { console.log(`${this.id || "(unknown)"}.${name} (set)`, value); this.audioElement[name] = value; } : undefined;
+  const get = function () { console.log(`${this.id || "(unknown)"}.${name} (get)`); return this._audioElement[name]; };
+  const set = (!audioProperties[name].readOnly) ? function (value) { console.log(`${this.id || "(unknown)"}.${name} (set)`, value); this._audioElement[name] = value; } : undefined;
   Object.defineProperty(AudioVisualization.prototype, name, { get, set, enumerable: false, configurable: true });
 });
-
-
-function getDescriptors(...args) {
-  return args.reduce((obj1, arg) => Object.assign(obj1, Object.getOwnPropertyNames(arg).reduce((obj2, name) => Object.assign(obj2, { [name]: Object.getOwnPropertyDescriptor(arg, name) }), {})), {});
-}
-
-const audioDescriptors = getDescriptors(HTMLMediaElement.prototype, HTMLAudioElement.prototype);
-const audioDescriptorKeys = Object.keys(audioDescriptors);
-const audioVisualizationDescriptors = getDescriptors(AudioVisualization.prototype);
-const audioVisualizationKeys = Object.keys(audioVisualizationDescriptors);
-const missingKeys = audioDescriptorKeys.filter((key) => audioVisualizationKeys.indexOf(key) === -1).sort();
-const missingDescriptors = missingKeys.map((key) => ({ [key]: audioDescriptors[key] })).reduce((obj, descriptor) => Object.assign(obj, descriptor), {});
-
-console.log("audio descriptors", audioDescriptors);
-console.log("audio visualization descriptors", audioVisualizationDescriptors);
-console.log("missing descriptors", missingDescriptors);
 
 export default AudioVisualization;

@@ -110,6 +110,10 @@ template.innerHTML = `
       height: 150px;
     }
 
+    :host([hidden]) {
+      display: none
+    }
+
     div {
       display: flex;
       flex-direction: column;

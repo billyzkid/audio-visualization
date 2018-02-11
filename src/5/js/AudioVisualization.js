@@ -63,16 +63,6 @@ const audioPropertiesReadonly = [
   "webkitVideoDecodedByteCount"
 ];
 
-const audioAttributes = [
-  "autoplay",
-  "controls",
-  "crossorigin",
-  "loop",
-  "muted",
-  "preload",
-  "src"
-];
-
 const audioEvents = [
   "abort",
   "canplay",
@@ -168,9 +158,9 @@ class AudioVisualization extends HTMLElement {
     const audioEventHandler = (event) => this._dispatchAudioEvent(event);
     audioEvents.forEach((name) => audioElement[`on${name}`] = audioEventHandler);
 
-    this._onpaint = null;
     this._audioElement = audioElement;
     this._canvasContext = canvasElement.getContext("2d");
+    this._onpaint = null;
 
     this._animationCallback = () => {
       this._requestAnimation();
@@ -182,31 +172,19 @@ class AudioVisualization extends HTMLElement {
   }
 
   static get observedAttributes() {
-    return ["onpaint"].concat(audioAttributes);
+    return [
+      "autoplay",
+      "controls",
+      "crossorigin",
+      "loop",
+      "muted",
+      "onpaint",
+      "preload",
+      "src"
+    ]
   }
 
-  get onpaint() {
-    console.log(`${this.id || "(unknown)"}.onpaint (get)`);
-
-    return this._onpaint;
-  }
-
-  set onpaint(value) {
-    console.log(`${this.id || "(unknown)"}.onpaint (set)`, [value]);
-
-    const oldValue = this._onpaint;
-    const newValue = (typeof value === "function") ? value : null;
-
-    if (oldValue) {
-      this.removeEventListener("paint", oldValue);
-    }
-
-    if (newValue) {
-      this.addEventListener("paint", newValue);
-    }
-
-    this._onpaint = newValue;
-  }
+  //#region reflected properties
 
   get autoplay() {
     console.log(`${this.id || "(unknown)"}.autoplay (get)`);
@@ -284,6 +262,29 @@ class AudioVisualization extends HTMLElement {
     }
   }
 
+  get onpaint() {
+    console.log(`${this.id || "(unknown)"}.onpaint (get)`);
+
+    return this._onpaint;
+  }
+
+  set onpaint(value) {
+    console.log(`${this.id || "(unknown)"}.onpaint (set)`, [value]);
+
+    const oldValue = this._onpaint;
+    const newValue = (typeof value === "function") ? value : null;
+
+    if (oldValue) {
+      this.removeEventListener("paint", oldValue);
+    }
+
+    if (newValue) {
+      this.addEventListener("paint", newValue);
+    }
+
+    this._onpaint = newValue;
+  }
+
   get preload() {
     console.log(`${this.id || "(unknown)"}.preload (get)`);
 
@@ -307,6 +308,8 @@ class AudioVisualization extends HTMLElement {
 
     this.setAttribute("src", value);
   }
+
+  //#endregion
 
   connectedCallback() {
     //console.log(`${this.id || "(unknown)"}.connectedCallback`);
@@ -393,81 +396,5 @@ audioPropertiesReadonly.filter((name) => !AudioVisualization.prototype.hasOwnPro
   const get = function () { console.log(`${this.id || "(unknown)"}.${name} (get)`); return this._audioElement[name]; };
   Object.defineProperty(AudioVisualization.prototype, name, { get, enumerable: false, configurable: true });
 });
-
-//defineEventAttributes(AudioVisualization, ["paint"]);
-
-// function defineEventAttributes(Class, eventTypes) {
-//   let onEventTypes = eventTypes.map(type => 'on' + type);
-//   eventTypes.forEach(type => {
-//     const symbol = Symbol();
-//     Object.defineProperty(Class.prototype, 'on' + type, {
-//       get: function () {
-//         return this[symbol] || null;
-//       },
-//       set: function (callback) {
-//         this[symbol] && this.removeEventListener(type, this[symbol]);
-//         this[symbol] = typeof callback == 'function' ? callback : null;
-//         this[symbol] && this.addEventListener(type, this[symbol]);
-//       },
-//       enumerable: false,
-//     });
-//   });
-
-//   let superObservedAttributes = Class.observedAttributes;
-//   if ('observedAttributes' in Class) {
-//     // If the element definition filters the set of observed attributes so that it only reports
-//     // on a specific subset of them, we’ll obviously need to add our on* attributes.
-//     Object.defineProperty(Class, 'observedAttributes', {
-//       value: superObservedAttributes.concat(onEventTypes),
-//     });
-//   }
-
-//   let superACC = Class.prototype.attributeChangedCallback;
-//   Object.defineProperty(Class.prototype, 'attributeChangedCallback', {
-//     value: function attributeChangedCallback(name, oldValue, newValue) {
-//       if (onEventTypes.indexOf(name) != -1) {
-//         // It's one of our events, so we handle it.
-//         let callback;
-//         if (newValue != null) {
-//           try {
-//             callback = Function('event', newValue);
-//           } catch (e) {
-//             // Browsers tend to show an error in the console, but it's not
-//             // thrown from this context; the property access returns null.
-//             // I wonder, would setTimeout(function() { throw e; }, 0) be better?
-//             window.console && console.error && console.error(e);
-//           }
-//         }
-//         this[name] = callback;
-//       }
-//       if (!superObservedAttributes || superObservedAttributes.indexOf(name)) {
-//         // The real attributeChangedCallback wants this attribute.
-//         // (Note that it may be one of our events too; that’s OK.)
-//         superACC && superACC.apply(this, arguments);
-//       }
-//     },
-//     enumerable: false,
-//   });
-
-//   // Custom Events V1 has attributeChangedCallback being called for all suitable attributes on
-//   // upgrade, so we don’t need to do anything for it. Custom Elements V0 (which is what polyfills
-//   // like webcomponents.js polyfill at the time of writing) doesn’t, so it needs createdCallback
-//   // to be set to hook up the events initially. (V1 uses constructor instead of createdCallback,
-//   // so this change should be harmless.)
-//   let superCC = Class.prototype.createdCallback;
-//   Object.defineProperty(Class.prototype, 'createdCallback', {
-//     value: function createdCallback() {
-//       superCC && superCC.apply(this, arguments);
-//       for (let type of eventTypes) {
-//         let name = 'on' + type,
-//           value = this.getAttribute(name);
-//         if (value != null) {
-//           this.attributeChangedCallback(name, null, value);
-//         }
-//       }
-//     },
-//     enumerable: false,
-//   });
-// }
 
 export default AudioVisualization;

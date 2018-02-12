@@ -8,9 +8,8 @@
     <script src="js/index.js" type="module"></script>
   </head>
   <body>
-    <button id="myButton" onclick="console.log(this.id);">Button</button>
     <audio id="myAudio" controls>Audio Unsupported</audio>
     <video id="myVideo" controls>Video Unsupported</video>
-    <audio-visualization id="myAudioVisualization" controls onpaint="console.log(event.canvasContext);">Audio Visualization Unsupported</audio-visualization>
+    <audio-visualization id="myAudioVisualization" controls onclick="console.log(event);" onpaint="console.log(event);">Audio Visualization Unsupported</audio-visualization>
   </body>
 </html>

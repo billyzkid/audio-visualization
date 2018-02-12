@@ -1,94 +1,48 @@
-import PaintEvent from "./PaintEvent.js";
+function describe(obj) {
+  return Object.getOwnPropertyNames(obj).reduce((acc, name) => Object.assign(acc, { [name]: Object.getOwnPropertyDescriptor(obj, name) }), {});
+}
 
-const audioConstants = [
-  "HAVE_CURRENT_DATA",
-  "HAVE_ENOUGH_DATA",
-  "HAVE_FUTURE_DATA",
-  "HAVE_METADATA",
-  "HAVE_NOTHING",
-  "NETWORK_EMPTY",
-  "NETWORK_IDLE",
-  "NETWORK_LOADING",
-  "NETWORK_NO_SOURCE"
-]
-
-const audioMethods = [
-  "addTextTrack",
-  "canPlayType",
-  "captureStream",
-  "load",
-  "pause",
-  "play",
-  "setMediaKeys",
-  "setSinkId"
+const audioDescriptors = Object.assign({}, describe(HTMLMediaElement.prototype), describe(HTMLAudioElement.prototype));
+const audioProperties = Object.keys(audioDescriptors).filter((name) => typeof audioDescriptors[name].get === "function" || typeof audioDescriptors[name].set === "function").sort();
+const audioMethods = Object.keys(audioDescriptors).filter((name) => typeof audioDescriptors[name].value === "function").sort();
+const audioConstants = Object.keys(audioDescriptors).filter((name) => typeof audioDescriptors[name].value !== "undefined" && !audioDescriptors[name].writable).sort();
+const audioEvents = [
+  "onabort",
+  "oncanplay",
+  "oncanplaythrough",
+  "oncuechange",
+  "ondurationchange",
+  "onemptied",
+  "onencrypted",
+  "onended",
+  "onerror",
+  "onloadeddata",
+  "onloadedmetadata",
+  "onloadstart",
+  "onpause",
+  "onplay",
+  "onplaying",
+  "onprogress",
+  "onratechange",
+  "onseeked",
+  "onseeking",
+  "onstalled",
+  "onsuspend",
+  "ontimeupdate",
+  "onvolumechange",
+  "onwaiting",
+  "onwaitingforkey"
 ];
 
-const audioPropertiesWritable = [
+const observedAttributes = [
   "autoplay",
   "controls",
-  "controlsList",
-  "crossOrigin",
-  "currentTime",
-  "defaultMuted",
-  "defaultPlaybackRate",
-  "disableRemotePlayback",
+  "crossorigin",
   "loop",
   "muted",
-  "onencrypted",
-  "onwaitingforkey",
-  "playbackRate",
+  "onpaint",
   "preload",
-  "src",
-  "srcObject",
-  "volume"
-];
-
-const audioPropertiesReadonly = [
-  "buffered",
-  "currentSrc",
-  "duration",
-  "ended",
-  "error",
-  "mediaKeys",
-  "networkState",
-  "paused",
-  "played",
-  "readyState",
-  "remote",
-  "seekable",
-  "seeking",
-  "sinkId",
-  "textTracks",
-  "webkitAudioDecodedByteCount",
-  "webkitVideoDecodedByteCount"
-];
-
-const audioEvents = [
-  "abort",
-  "canplay",
-  "canplaythrough",
-  "cuechange",
-  "durationchange",
-  "emptied",
-  "encrypted",
-  "ended",
-  "error",
-  "loadeddata",
-  "loadedmetadata",
-  "loadstart",
-  "pause",
-  "play",
-  "playing",
-  "progress",
-  "ratechange",
-  "seeked",
-  "seeking",
-  "stalled",
-  "suspend",
-  "timeupdate",
-  "volumechange",
-  "waiting",
-  "waitingforkey"
+  "src"
 ];
 
 const template = document.createElement("template");
@@ -156,7 +110,7 @@ class AudioVisualization extends HTMLElement {
     const audioDestinationNode = audioSourceNode.connect(audioGainNode).connect(audioAnalyserNode).connect(audioContext.destination);
 
     const audioEventHandler = (event) => this._dispatchAudioEvent(event);
-    audioEvents.forEach((name) => audioElement[`on${name}`] = audioEventHandler);
+    audioEvents.forEach((name) => audioElement[name] = audioEventHandler);
 
     this._audioElement = audioElement;
     this._canvasContext = canvasElement.getContext("2d");
@@ -172,19 +126,8 @@ class AudioVisualization extends HTMLElement {
   }
 
   static get observedAttributes() {
-    return [
-      "autoplay",
-      "controls",
-      "crossorigin",
-      "loop",
-      "muted",
-      "onpaint",
-      "preload",
-      "src"
-    ]
+    return observedAttributes;
   }
-
-  //#region reflected properties
 
   get autoplay() {
     console.log(`${this.id || "(unknown)"}.autoplay (get)`);
@@ -193,7 +136,7 @@ class AudioVisualization extends HTMLElement {
   }
 
   set autoplay(value) {
-    console.log(`${this.id || "(unknown)"}.autoplay (set)`, [value]);
+    console.log(`${this.id || "(unknown)"}.autoplay (set)`, { value });
 
     if (value) {
       this.setAttribute("autoplay", "");
@@ -209,7 +152,7 @@ class AudioVisualization extends HTMLElement {
   }
 
   set controls(value) {
-    console.log(`${this.id || "(unknown)"}.controls (set)`, [value]);
+    console.log(`${this.id || "(unknown)"}.controls (set)`, { value });
 
     if (value) {
       this.setAttribute("controls", "");
@@ -225,7 +168,7 @@ class AudioVisualization extends HTMLElement {
   }
 
   set crossOrigin(value) {
-    console.log(`${this.id || "(unknown)"}.crossOrigin (set)`, [value]);
+    console.log(`${this.id || "(unknown)"}.crossOrigin (set)`, { value });
 
     this.setAttribute("crossorigin", value);
   }
@@ -237,7 +180,7 @@ class AudioVisualization extends HTMLElement {
   }
 
   set defaultMuted(value) {
-    console.log(`${this.id || "(unknown)"}.defaultMuted (set)`, [value]);
+    console.log(`${this.id || "(unknown)"}.defaultMuted (set)`, { value });
 
     if (value) {
       this.setAttribute("muted", "");
@@ -253,7 +196,7 @@ class AudioVisualization extends HTMLElement {
   }
 
   set loop(value) {
-    console.log(`${this.id || "(unknown)"}.loop (set)`, [value]);
+    console.log(`${this.id || "(unknown)"}.loop (set)`, { value });
 
     if (value) {
       this.setAttribute("loop", "");
@@ -269,7 +212,7 @@ class AudioVisualization extends HTMLElement {
   }
 
   set onpaint(value) {
-    console.log(`${this.id || "(unknown)"}.onpaint (set)`, [value]);
+    console.log(`${this.id || "(unknown)"}.onpaint (set)`, { value });
 
     const oldValue = this._onpaint;
     const newValue = (typeof value === "function") ? value : null;
@@ -292,7 +235,7 @@ class AudioVisualization extends HTMLElement {
   }
 
   set preload(value) {
-    console.log(`${this.id || "(unknown)"}.preload (set)`, [value]);
+    console.log(`${this.id || "(unknown)"}.preload (set)`, { value });
 
     this.setAttribute("preload", value);
   }
@@ -304,15 +247,13 @@ class AudioVisualization extends HTMLElement {
   }
 
   set src(value) {
-    console.log(`${this.id || "(unknown)"}.src (set)`, [value]);
+    console.log(`${this.id || "(unknown)"}.src (set)`, { value });
 
     this.setAttribute("src", value);
   }
 
-  //#endregion
-
   connectedCallback() {
-    //console.log(`${this.id || "(unknown)"}.connectedCallback`);
+    console.log(`${this.id || "(unknown)"}.connectedCallback`);
 
     this._requestAnimation();
   }
@@ -328,7 +269,7 @@ class AudioVisualization extends HTMLElement {
   }
 
   attributeChangedCallback(name, oldValue, newValue) {
-    console.log(`${this.id || "(unknown)"}.attributeChangedCallback`, [name, oldValue, newValue]);
+    console.log(`${this.id || "(unknown)"}.attributeChangedCallback`, { name, oldValue, newValue });
 
     if (name === "onpaint") {
       let callback;
@@ -348,7 +289,7 @@ class AudioVisualization extends HTMLElement {
   }
 
   _requestAnimation() {
-    //console.log(`${this.id || "(unknown)"}._requestAnimation`);
+    console.log(`${this.id || "(unknown)"}._requestAnimation`);
 
     this._animationRequestId = requestAnimationFrame(this._animationCallback);
   }
@@ -360,41 +301,53 @@ class AudioVisualization extends HTMLElement {
   }
 
   _dispatchAudioEvent(event) {
-    console.log(`${this.id || "(unknown)"}._dispatchAudioEvent`, [event]);
+    console.log(`${this.id || "(unknown)"}._dispatchAudioEvent`, { event });
 
     this.dispatchEvent(new Event(event.type, event));
   }
 
   _dispatchPaintEvent() {
-    //console.log(`${this.id || "(unknown)"}._dispatchPaintEvent`);
+    console.log(`${this.id || "(unknown)"}._dispatchPaintEvent`);
 
-    this.dispatchEvent(new PaintEvent());
+    this.dispatchEvent(new Event("paint"));
   }
 }
 
-// Copy audio constants to AudioVisualization prototype
-audioConstants.filter((name) => !AudioVisualization.prototype.hasOwnProperty(name)).forEach((name) => {
-  const value = HTMLAudioElement.prototype[name];
-  Object.defineProperty(AudioVisualization.prototype, name, { value, writable: false, enumerable: false, configurable: false });
-});
+// Copy audio properties to AudioVisualization prototype
+audioProperties.filter((name) => !AudioVisualization.prototype.hasOwnProperty(name)).forEach((name) => Object.defineProperty(AudioVisualization.prototype, name, {
+  get: (typeof audioDescriptors[name].get === "function") ? function () { console.log(`${this.id || "(unknown)"}.${name} (get)`); return this._audioElement[name]; } : undefined,
+  set: (typeof audioDescriptors[name].set === "function") ? function (value) { console.log(`${this.id || "(unknown)"}.${name} (set)`, { value }); this._audioElement[name] = value; } : undefined,
+  enumerable: false,
+  configurable: true
+}));
 
 // Copy audio methods to AudioVisualization prototype
-audioMethods.filter((name) => !AudioVisualization.prototype.hasOwnProperty(name)).forEach((name) => {
-  const value = function (...args) { console.log(`${this.id || "(unknown)"}.${name}`, args); return this._audioElement[name](...args); };
-  Object.defineProperty(AudioVisualization.prototype, name, { value, writable: true, enumerable: false, configurable: true });
-});
+audioMethods.filter((name) => !AudioVisualization.prototype.hasOwnProperty(name)).forEach((name) => Object.defineProperty(AudioVisualization.prototype, name, {
+  value: function (...args) { console.log(`${this.id || "(unknown)"}.${name}`, { args }); return this._audioElement[name](...args); },
+  writable: true,
+  enumerable: false,
+  configurable: true
+}));
 
-// Copy writable audio properties to AudioVisualization prototype
-audioPropertiesWritable.filter((name) => !AudioVisualization.prototype.hasOwnProperty(name)).forEach((name) => {
-  const get = function () { console.log(`${this.id || "(unknown)"}.${name} (get)`); return this._audioElement[name]; };
-  const set = function (value) { console.log(`${this.id || "(unknown)"}.${name} (set)`, [value]); this._audioElement[name] = value; };
-  Object.defineProperty(AudioVisualization.prototype, name, { get, set, enumerable: false, configurable: true });
-});
+// Copy audio constants to AudioVisualization prototype
+audioConstants.filter((name) => !AudioVisualization.prototype.hasOwnProperty(name)).forEach((name) => Object.defineProperty(AudioVisualization.prototype, name, {
+  value: HTMLAudioElement.prototype[name],
+  writable: false,
+  enumerable: false,
+  configurable: false
+}));
 
-// Copy readonly audio properties to AudioVisualization prototype
-audioPropertiesReadonly.filter((name) => !AudioVisualization.prototype.hasOwnProperty(name)).forEach((name) => {
-  const get = function () { console.log(`${this.id || "(unknown)"}.${name} (get)`); return this._audioElement[name]; };
-  Object.defineProperty(AudioVisualization.prototype, name, { get, enumerable: false, configurable: true });
-});
+// const audioVisualizationDescriptors = describe(AudioVisualization.prototype);
+// const audioVisualizationDescriptorsAdded = Object.keys(audioVisualizationDescriptors).filter((name) => Object.keys(audioDescriptors).indexOf(name) === -1).reduce((acc, name) => Object.assign(acc, { [name]: audioVisualizationDescriptors[name] }), {});
+// const audioVisualizationDescriptorsMissing = Object.keys(audioDescriptors).filter((name) => Object.keys(audioVisualizationDescriptors).indexOf(name) === -1).reduce((acc, name) => Object.assign(acc, { [name]: audioDescriptors[name] }), {});
+
+// console.log("audioDescriptors", audioDescriptors);
+// console.log("audioProperties", audioProperties);
+// console.log("audioMethods", audioMethods);
+// console.log("audioConstants", audioConstants);
+// console.log("audioEvents", audioEvents);
+// console.log("audioVisualizationDescriptors", audioVisualizationDescriptors);
+// console.log("audioVisualizationDescriptorsAdded", audioVisualizationDescriptorsAdded);
+// console.log("audioVisualizationDescriptorsMissing", audioVisualizationDescriptorsMissing);
 
 export default AudioVisualization;

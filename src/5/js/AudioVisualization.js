@@ -21,6 +21,7 @@ const audioAttributes = Object.keys(audioDescriptors).filter((key) => typeof aud
 const audioProperties = Object.keys(audioDescriptors).filter((key) => typeof audioDescriptors[key].get === "function" && !audioDescriptors[key].hasOwnProperty("attribute")).sort();
 const audioMethods = Object.keys(audioDescriptors).filter((key) => key !== "constructor" && audioDescriptors[key].hasOwnProperty("value") && typeof audioDescriptors[key].value === "function").sort();
 const audioConstants = Object.keys(audioDescriptors).filter((key) => audioDescriptors[key].hasOwnProperty("value") && typeof audioDescriptors[key].value !== "function").sort();
+const observedAttributes = audioAttributes.map((name) => audioDescriptors[name].attribute).concat("onpaint").sort();
 
 const template = document.createElement("template");
 template.innerHTML = `
@@ -103,7 +104,7 @@ class AudioVisualization extends HTMLElement {
   }
 
   static get observedAttributes() {
-    return audioAttributes.concat("onpaint");
+    return observedAttributes;
   }
 
   get onpaint() {
@@ -146,16 +147,20 @@ class AudioVisualization extends HTMLElement {
   }
 
   attributeChangedCallback(name, oldValue, newValue) {
-    //console.log(`${this.id || "(unknown)"}.attributeChangedCallback`, { name, oldValue, newValue });
+    console.log(`${this.id || "(unknown)"}.attributeChangedCallback`, { name, oldValue, newValue });
 
-    switch (name) {
-      case "onpaint":
-        this.onpaint = (newValue !== null) ? new Function("event", newValue) : newValue;
-        break;
-
-      default:
-        this._audioElement[name] = newValue;
-        break;
+    if (name === "onpaint") {
+      if (newValue !== null) {
+        this.onpaint = new Function("event", newValue);
+      } else {
+        this.onpaint = newValue;
+      }
+    } else {
+      if (newValue !== null) {
+        this._audioElement.setAttribute(name, newValue);
+      } else {
+        this._audioElement.removeAttribute(name);
+      }
     }
   }
 
@@ -231,5 +236,6 @@ console.log("audioAttributes", audioAttributes);
 console.log("audioProperties", audioProperties);
 console.log("audioMethods", audioMethods);
 console.log("audioConstants", audioConstants);
+console.log("observedAttributes", observedAttributes);
 
 export default AudioVisualization;

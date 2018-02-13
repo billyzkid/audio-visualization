@@ -75,7 +75,7 @@ class AudioVisualization extends HTMLElement {
   constructor() {
     super();
 
-    //console.log(`${this.id || "(unknown)"}.constructor`);
+    console.log(`${this.id || "(unknown)"}.constructor`);
 
     const shadowNode = template.content.cloneNode(true);
     const audioElement = shadowNode.querySelector("audio");
@@ -108,13 +108,13 @@ class AudioVisualization extends HTMLElement {
   }
 
   get onpaint() {
-    //console.log(`${this.id || "(unknown)"}.onpaint (get)`);
+    console.log(`${this.id || "(unknown)"}.onpaint (get)`);
 
     return this._onpaint;
   }
 
   set onpaint(value) {
-    //console.log(`${this.id || "(unknown)"}.onpaint (set)`, { value });
+    console.log(`${this.id || "(unknown)"}.onpaint (set)`, { value });
 
     const oldValue = this._onpaint;
     const newValue = (typeof value === "function") ? value : null;
@@ -131,19 +131,19 @@ class AudioVisualization extends HTMLElement {
   }
 
   connectedCallback() {
-    //console.log(`${this.id || "(unknown)"}.connectedCallback`);
+    console.log(`${this.id || "(unknown)"}.connectedCallback`);
 
     this._requestAnimation();
   }
 
   disconnectedCallback() {
-    //console.log(`${this.id || "(unknown)"}.disconnectedCallback`);
+    console.log(`${this.id || "(unknown)"}.disconnectedCallback`);
 
     this._cancelAnimation();
   }
 
   adoptedCallback() {
-    //console.log(`${this.id || "(unknown)"}.adoptedCallback`);
+    console.log(`${this.id || "(unknown)"}.adoptedCallback`);
   }
 
   attributeChangedCallback(name, oldValue, newValue) {
@@ -165,25 +165,25 @@ class AudioVisualization extends HTMLElement {
   }
 
   _requestAnimation() {
-    //console.log(`${this.id || "(unknown)"}._requestAnimation`);
+    console.log(`${this.id || "(unknown)"}._requestAnimation`);
 
     this._animationRequestId = requestAnimationFrame(this._animationCallback);
   }
 
   _cancelAnimation() {
-    //console.log(`${this.id || "(unknown)"}._cancelAnimation`);
+    console.log(`${this.id || "(unknown)"}._cancelAnimation`);
 
     cancelAnimationFrame(this._animationRequestId);
   }
 
   _dispatchAudioEvent(event) {
-    //console.log(`${this.id || "(unknown)"}._dispatchAudioEvent`, { event });
+    console.log(`${this.id || "(unknown)"}._dispatchAudioEvent`, { event });
 
     this.dispatchEvent(new Event(event.type, event));
   }
 
   _dispatchPaintEvent() {
-    //console.log(`${this.id || "(unknown)"}._dispatchPaintEvent`);
+    console.log(`${this.id || "(unknown)"}._dispatchPaintEvent`);
 
     this.dispatchEvent(new Event("paint"));
   }
@@ -221,7 +221,7 @@ audioConstants.forEach((name) => Object.defineProperty(AudioVisualization.protot
   configurable: false
 }));
 
-// const audioVisualizationDescriptors = describe(AudioVisualization.prototype);
+// const audioVisualizationDescriptors = Object.getOwnPropertyDescriptors(AudioVisualization.prototype);
 // const audioVisualizationDescriptorsAdded = Object.keys(audioVisualizationDescriptors).filter((name) => Object.keys(audioDescriptors).indexOf(name) === -1).reduce((acc, name) => Object.assign(acc, { [name]: audioVisualizationDescriptors[name] }), {});
 // const audioVisualizationDescriptorsMissing = Object.keys(audioDescriptors).filter((name) => Object.keys(audioVisualizationDescriptors).indexOf(name) === -1).reduce((acc, name) => Object.assign(acc, { [name]: audioDescriptors[name] }), {});
 
@@ -231,11 +231,11 @@ audioConstants.forEach((name) => Object.defineProperty(AudioVisualization.protot
 // console.log("audioVisualizationDescriptorsAdded", audioVisualizationDescriptorsAdded);
 // console.log("audioVisualizationDescriptorsMissing", audioVisualizationDescriptorsMissing);
 
-console.log("audioEvents", audioEvents);
-console.log("audioAttributes", audioAttributes);
-console.log("audioProperties", audioProperties);
-console.log("audioMethods", audioMethods);
-console.log("audioConstants", audioConstants);
-console.log("observedAttributes", observedAttributes);
+// console.log("audioEvents", audioEvents);
+// console.log("audioAttributes", audioAttributes);
+// console.log("audioProperties", audioProperties);
+// console.log("audioMethods", audioMethods);
+// console.log("audioConstants", audioConstants);
+// console.log("observedAttributes", observedAttributes);
 
 export default AudioVisualization;

@@ -1,12 +1,8 @@
-const allDescriptors = Object.assign({},
-  Object.getOwnPropertyDescriptors(Element.prototype),
-  Object.getOwnPropertyDescriptors(HTMLElement.prototype),
-  Object.getOwnPropertyDescriptors(HTMLMediaElement.prototype),
-  Object.getOwnPropertyDescriptors(HTMLAudioElement.prototype));
+import { getPropertyDescriptors, diff } from "./utilities.js";
 
-const audioDescriptors = Object.assign({},
-  Object.getOwnPropertyDescriptors(HTMLMediaElement.prototype),
-  Object.getOwnPropertyDescriptors(HTMLAudioElement.prototype));
+const allDescriptors = getPropertyDescriptors(HTMLAudioElement);
+const baseDescriptors = getPropertyDescriptors(HTMLElement);
+const audioDescriptors = diff(allDescriptors, baseDescriptors);
 
 Object.assign(audioDescriptors.autoplay, { attribute: "autoplay", boolean: true });
 Object.assign(audioDescriptors.controls, { attribute: "controls", boolean: true });
@@ -19,9 +15,16 @@ Object.assign(audioDescriptors.src, { attribute: "src", boolean: false });
 const audioEvents = Object.keys(allDescriptors).filter((key) => /^on(abort|canplay|canplaythrough|cuechange|durationchange|emptied|encrypted|ended|error|loadeddata|loadedmetadata|loadstart|pause|play|playing|progress|ratechange|seeked|seeking|stalled|suspend|timeupdate|volumechange|waiting|waitingforkey)$/.test(key)).sort();
 const audioAttributes = Object.keys(audioDescriptors).filter((key) => typeof audioDescriptors[key].get === "function" && audioDescriptors[key].hasOwnProperty("attribute")).sort();
 const audioProperties = Object.keys(audioDescriptors).filter((key) => typeof audioDescriptors[key].get === "function" && !audioDescriptors[key].hasOwnProperty("attribute")).sort();
-const audioMethods = Object.keys(audioDescriptors).filter((key) => key !== "constructor" && audioDescriptors[key].hasOwnProperty("value") && typeof audioDescriptors[key].value === "function").sort();
-const audioConstants = Object.keys(audioDescriptors).filter((key) => audioDescriptors[key].hasOwnProperty("value") && typeof audioDescriptors[key].value !== "function").sort();
-const observedAttributes = audioAttributes.map((name) => audioDescriptors[name].attribute).concat("onpaint").sort();
+const audioMethods = Object.keys(audioDescriptors).filter((key) => typeof audioDescriptors[key].value === "function").sort();
+const audioConstants = Object.keys(audioDescriptors).filter((key) => !audioDescriptors[key].writable && audioDescriptors[key].hasOwnProperty("value")).sort();
+const observedAttributes = audioAttributes.map((key) => audioDescriptors[key].attribute).concat("onpaint").sort();
+
+// console.log("audioEvents", audioEvents);
+// console.log("audioAttributes", audioAttributes);
+// console.log("audioProperties", audioProperties);
+// console.log("audioMethods", audioMethods);
+// console.log("audioConstants", audioConstants);
+// console.log("observedAttributes", observedAttributes);
 
 const template = document.createElement("template");
 template.innerHTML = `
@@ -221,21 +224,12 @@ audioConstants.forEach((name) => Object.defineProperty(AudioVisualization.protot
   configurable: false
 }));
 
-// const audioVisualizationDescriptors = Object.getOwnPropertyDescriptors(AudioVisualization.prototype);
-// const audioVisualizationDescriptorsAdded = Object.keys(audioVisualizationDescriptors).filter((name) => Object.keys(audioDescriptors).indexOf(name) === -1).reduce((acc, name) => Object.assign(acc, { [name]: audioVisualizationDescriptors[name] }), {});
-// const audioVisualizationDescriptorsMissing = Object.keys(audioDescriptors).filter((name) => Object.keys(audioVisualizationDescriptors).indexOf(name) === -1).reduce((acc, name) => Object.assign(acc, { [name]: audioDescriptors[name] }), {});
+// const allDescriptors2 = getPropertyDescriptors(AudioVisualization);
+// const baseDescriptors2 = getPropertyDescriptors(HTMLAudioElement);
+// const addedDescriptors = diff(allDescriptors2, baseDescriptors2);
+// const missingDescriptors = diff(baseDescriptors2, allDescriptors2);
 
-// console.log("allDescriptors", allDescriptors);
-// console.log("audioDescriptors", audioDescriptors);
-// console.log("audioVisualizationDescriptors", audioVisualizationDescriptors);
-// console.log("audioVisualizationDescriptorsAdded", audioVisualizationDescriptorsAdded);
-// console.log("audioVisualizationDescriptorsMissing", audioVisualizationDescriptorsMissing);
-
-// console.log("audioEvents", audioEvents);
-// console.log("audioAttributes", audioAttributes);
-// console.log("audioProperties", audioProperties);
-// console.log("audioMethods", audioMethods);
-// console.log("audioConstants", audioConstants);
-// console.log("observedAttributes", observedAttributes);
+// console.log(addedDescriptors);
+// console.log(missingDescriptors);
 
 export default AudioVisualization;

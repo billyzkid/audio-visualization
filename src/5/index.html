@@ -8,8 +8,8 @@
     <script src="js/index.js" type="module"></script>
   </head>
   <body>
-    <audio id="myAudio" controls>Audio Unsupported</audio>
-    <video id="myVideo" controls>Video Unsupported</video>
-    <audio-visualization id="myAudioVisualization" controls onclick="console.log(event);" onpaint="console.log(event);">Audio Visualization Unsupported</audio-visualization>
+    <audio id="myAudio" controls onclick="console.log(event);">Audio Unsupported</audio>
+    <video id="myVideo" controls onclick="console.log(event);">Video Unsupported</video>
+    <audio-visualization id="myAudioVisualization" controls onclick="console.log(event);" onencrypted="console.log(event);" onwaitingforkey="console.log(event);" onpaint="console.log(event);">Audio Visualization Unsupported</audio-visualization>
   </body>
 </html>

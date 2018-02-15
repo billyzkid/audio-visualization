@@ -1,30 +1,26 @@
 import { getPropertyDescriptors, diff } from "./utilities.js";
 
-const allDescriptors = getPropertyDescriptors(HTMLAudioElement);
 const baseDescriptors = getPropertyDescriptors(HTMLElement);
-const audioDescriptors = diff(allDescriptors, baseDescriptors);
+const audioDescriptors = getPropertyDescriptors(HTMLAudioElement);
 
-Object.assign(audioDescriptors.autoplay, { attribute: "autoplay", boolean: true });
-Object.assign(audioDescriptors.controls, { attribute: "controls", boolean: true });
-Object.assign(audioDescriptors.crossOrigin, { attribute: "crossorigin", boolean: false });
-Object.assign(audioDescriptors.defaultMuted, { attribute: "muted", boolean: true });
-Object.assign(audioDescriptors.loop, { attribute: "loop", boolean: true });
-Object.assign(audioDescriptors.preload, { attribute: "preload", boolean: false });
-Object.assign(audioDescriptors.src, { attribute: "src", boolean: false });
+Object.assign(audioDescriptors.autoplay, { attribute: "autoplay", empty: true });
+Object.assign(audioDescriptors.controls, { attribute: "controls", empty: true });
+Object.assign(audioDescriptors.crossOrigin, { attribute: "crossorigin", empty: false });
+Object.assign(audioDescriptors.defaultMuted, { attribute: "muted", empty: true });
+Object.assign(audioDescriptors.loop, { attribute: "loop", empty: true });
+Object.assign(audioDescriptors.onencrypted, { attribute: "onencrypted", empty: false });
+Object.assign(audioDescriptors.onwaitingforkey, { attribute: "onwaitingforkey", empty: false });
+Object.assign(audioDescriptors.preload, { attribute: "preload", empty: false });
+Object.assign(audioDescriptors.src, { attribute: "src", empty: false });
 
-const audioEvents = Object.keys(allDescriptors).filter((key) => /^on(abort|canplay|canplaythrough|cuechange|durationchange|emptied|encrypted|ended|error|loadeddata|loadedmetadata|loadstart|pause|play|playing|progress|ratechange|seeked|seeking|stalled|suspend|timeupdate|volumechange|waiting|waitingforkey)$/.test(key)).sort();
-const audioAttributes = Object.keys(audioDescriptors).filter((key) => typeof audioDescriptors[key].get === "function" && audioDescriptors[key].hasOwnProperty("attribute")).sort();
-const audioProperties = Object.keys(audioDescriptors).filter((key) => typeof audioDescriptors[key].get === "function" && !audioDescriptors[key].hasOwnProperty("attribute")).sort();
-const audioMethods = Object.keys(audioDescriptors).filter((key) => typeof audioDescriptors[key].value === "function").sort();
-const audioConstants = Object.keys(audioDescriptors).filter((key) => !audioDescriptors[key].writable && audioDescriptors[key].hasOwnProperty("value")).sort();
-const observedAttributes = audioAttributes.map((key) => audioDescriptors[key].attribute).concat("onpaint").sort();
+const baseDescriptorKeys = Object.keys(baseDescriptors);
+const audioDescriptorKeys = Object.keys(audioDescriptors);
 
-// console.log("audioEvents", audioEvents);
-// console.log("audioAttributes", audioAttributes);
-// console.log("audioProperties", audioProperties);
-// console.log("audioMethods", audioMethods);
-// console.log("audioConstants", audioConstants);
-// console.log("observedAttributes", observedAttributes);
+const audioEvents = audioDescriptorKeys.filter((key) => /^on(abort|canplay|canplaythrough|cuechange|durationchange|emptied|encrypted|ended|error|loadeddata|loadedmetadata|loadstart|pause|play|playing|progress|ratechange|seeked|seeking|stalled|suspend|timeupdate|volumechange|waiting|waitingforkey)$/.test(key)).sort();
+const audioProperties = audioDescriptorKeys.filter((key) => !baseDescriptorKeys.includes(key) && (typeof audioDescriptors[key].get === "function" || typeof audioDescriptors[key].set === "function")).sort();
+const audioMethods = audioDescriptorKeys.filter((key) => !baseDescriptorKeys.includes(key) && typeof audioDescriptors[key].value === "function").sort();
+const audioConstants = audioDescriptorKeys.filter((key) => !baseDescriptorKeys.includes(key) && audioDescriptors[key].hasOwnProperty("value") && !audioDescriptors[key].writable).sort();
+const observedAttributes = audioDescriptorKeys.filter((key) => !baseDescriptorKeys.includes(key) && audioDescriptors[key].hasOwnProperty("attribute")).map((key) => audioDescriptors[key].attribute).concat("onpaint").sort();
 
 const template = document.createElement("template");
 template.innerHTML = `
@@ -78,7 +74,7 @@ class AudioVisualization extends HTMLElement {
   constructor() {
     super();
 
-    console.log(`${this.id || "(unknown)"}.constructor`);
+    //console.log(`${this.id || "(unknown)"}.constructor`);
 
     const shadowNode = template.content.cloneNode(true);
     const audioElement = shadowNode.querySelector("audio");
@@ -111,13 +107,13 @@ class AudioVisualization extends HTMLElement {
   }
 
   get onpaint() {
-    console.log(`${this.id || "(unknown)"}.onpaint (get)`);
+    //console.log(`${this.id || "(unknown)"}.onpaint (get)`);
 
     return this._onpaint;
   }
 
   set onpaint(value) {
-    console.log(`${this.id || "(unknown)"}.onpaint (set)`, { value });
+    //console.log(`${this.id || "(unknown)"}.onpaint (set)`, { value });
 
     const oldValue = this._onpaint;
     const newValue = (typeof value === "function") ? value : null;
@@ -134,102 +130,99 @@ class AudioVisualization extends HTMLElement {
   }
 
   connectedCallback() {
-    console.log(`${this.id || "(unknown)"}.connectedCallback`);
+    //console.log(`${this.id || "(unknown)"}.connectedCallback`);
 
     this._requestAnimation();
   }
 
   disconnectedCallback() {
-    console.log(`${this.id || "(unknown)"}.disconnectedCallback`);
+    //console.log(`${this.id || "(unknown)"}.disconnectedCallback`);
 
     this._cancelAnimation();
   }
 
   adoptedCallback() {
-    console.log(`${this.id || "(unknown)"}.adoptedCallback`);
+    //console.log(`${this.id || "(unknown)"}.adoptedCallback`);
   }
 
   attributeChangedCallback(name, oldValue, newValue) {
-    console.log(`${this.id || "(unknown)"}.attributeChangedCallback`, { name, oldValue, newValue });
+    //console.log(`${this.id || "(unknown)"}.attributeChangedCallback`, { name, oldValue, newValue });
 
     if (name === "onpaint") {
-      if (newValue !== null) {
-        this.onpaint = new Function("event", newValue);
-      } else {
-        this.onpaint = newValue;
-      }
+      this.onpaint = (newValue !== null) ? new Function("event", newValue) : null;
+    } else if (newValue !== null) {
+      this._audioElement.setAttribute(name, newValue);
     } else {
-      if (newValue !== null) {
-        this._audioElement.setAttribute(name, newValue);
-      } else {
-        this._audioElement.removeAttribute(name);
-      }
+      this._audioElement.removeAttribute(name);
     }
   }
 
   _requestAnimation() {
-    console.log(`${this.id || "(unknown)"}._requestAnimation`);
+    //console.log(`${this.id || "(unknown)"}._requestAnimation`);
 
     this._animationRequestId = requestAnimationFrame(this._animationCallback);
   }
 
   _cancelAnimation() {
-    console.log(`${this.id || "(unknown)"}._cancelAnimation`);
+    //console.log(`${this.id || "(unknown)"}._cancelAnimation`);
 
     cancelAnimationFrame(this._animationRequestId);
   }
 
   _dispatchAudioEvent(event) {
-    console.log(`${this.id || "(unknown)"}._dispatchAudioEvent`, { event });
+    //console.log(`${this.id || "(unknown)"}._dispatchAudioEvent`, { event });
 
     this.dispatchEvent(new Event(event.type, event));
   }
 
   _dispatchPaintEvent() {
-    console.log(`${this.id || "(unknown)"}._dispatchPaintEvent`);
+    //console.log(`${this.id || "(unknown)"}._dispatchPaintEvent`);
 
     this.dispatchEvent(new Event("paint"));
   }
 }
 
-// Copy audio attributes to AudioVisualization prototype
-audioAttributes.map((name) => [name, audioDescriptors[name]]).forEach(([name, descriptor]) => Object.defineProperty(AudioVisualization.prototype, name, {
-  get: (descriptor.boolean) ? function () { return this.hasAttribute(descriptor.attribute) } : function () { return this.getAttribute(descriptor.attribute) },
-  set: (descriptor.boolean) ? function (value) { if (value) { this.setAttribute(descriptor.attribute, ""); } else { this.removeAttribute(descriptor.attribute); } } : function (value) { this.setAttribute(descriptor.attribute, value); },
+audioProperties.filter((key) => audioDescriptors[key].hasOwnProperty("attribute")).forEach((key) => Object.defineProperty(AudioVisualization.prototype, key, {
+  get: (audioDescriptors[key].empty) ? new Function(`return this.hasAttribute("${audioDescriptors[key].attribute}");`) : new Function(`return this.getAttribute("${audioDescriptors[key].attribute}");`),
+  set: (audioDescriptors[key].empty) ? new Function("value", `if (value) this.setAttribute("${audioDescriptors[key].attribute}", ""); else this.removeAttribute("${audioDescriptors[key].attribute}");`) : new Function("value", `this.setAttribute("${audioDescriptors[key].attribute}", value);`),
   enumerable: false,
   configurable: true
 }));
 
-// Copy audio properties to AudioVisualization prototype
-audioProperties.map((name) => [name, audioDescriptors[name]]).forEach(([name, descriptor]) => Object.defineProperty(AudioVisualization.prototype, name, {
-  get: (typeof descriptor.get === "function") ? function () { return this._audioElement[name]; } : undefined,
-  set: (typeof descriptor.set === "function") ? function (value) { this._audioElement[name] = value; } : undefined,
+audioProperties.filter((key) => !audioDescriptors[key].hasOwnProperty("attribute")).forEach((key) => Object.defineProperty(AudioVisualization.prototype, key, {
+  get: (typeof audioDescriptors[key].get === "function") ? new Function(`return this._audioElement.${key};`) : undefined,
+  set: (typeof audioDescriptors[key].set === "function") ? new Function("value", `this._audioElement.${key} = value;`) : undefined,
   enumerable: false,
   configurable: true
 }));
 
-// Copy audio methods to AudioVisualization prototype
-audioMethods.forEach((name) => Object.defineProperty(AudioVisualization.prototype, name, {
-  value: function (...args) { return this._audioElement[name](...args); },
+audioMethods.forEach((key) => Object.defineProperty(AudioVisualization.prototype, key, {
+  value: new Function("...args", `return this._audioElement.${key}(...args);`),
   writable: true,
   enumerable: false,
   configurable: true
 }));
 
-// Copy audio constants to AudioVisualization prototype
-audioConstants.forEach((name) => Object.defineProperty(AudioVisualization.prototype, name, {
-  value: HTMLAudioElement.prototype[name],
+audioConstants.forEach((key) => Object.defineProperty(AudioVisualization.prototype, key, {
+  value: audioDescriptors[key].value,
   writable: false,
   enumerable: false,
   configurable: false
 }));
 
-// const allDescriptors2 = getPropertyDescriptors(AudioVisualization);
-// const baseDescriptors2 = getPropertyDescriptors(HTMLAudioElement);
-// const addedDescriptors = diff(allDescriptors2, baseDescriptors2);
-// const missingDescriptors = diff(baseDescriptors2, allDescriptors2);
+const audioVisualizationDescriptors = getPropertyDescriptors(AudioVisualization);
+const audioVisualizationDescriptorsAdded = diff(audioVisualizationDescriptors, audioDescriptors);
+const audioVisualizationDescriptorsMissing = diff(audioDescriptors, audioVisualizationDescriptors);
 
-// console.log(addedDescriptors);
-// console.log(missingDescriptors);
+console.log("baseDescriptors", baseDescriptors);
+console.log("audioDescriptors", audioDescriptors);
+console.log("audioVisualizationDescriptors", audioVisualizationDescriptors);
+console.log("audioVisualizationDescriptorsAdded", audioVisualizationDescriptorsAdded);
+console.log("audioVisualizationDescriptorsMissing", audioVisualizationDescriptorsMissing);
+console.log("audioEvents", audioEvents);
+console.log("audioProperties", audioProperties);
+console.log("audioMethods", audioMethods);
+console.log("audioConstants", audioConstants);
+console.log("observedAttributes", observedAttributes);
 
 export default AudioVisualization;

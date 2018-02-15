@@ -94,8 +94,8 @@ class AudioVisualization extends HTMLElement {
     this._onpaint = null;
 
     this._animationCallback = () => {
-      //this._requestAnimation();
-      //this._dispatchPaintEvent();
+      this._requestAnimation();
+      this._dispatchPaintEvent();
     };
 
     const shadowRoot = this.attachShadow({ mode: "closed" });
@@ -210,19 +210,19 @@ audioConstants.forEach((key) => Object.defineProperty(AudioVisualization.prototy
   configurable: false
 }));
 
-const audioVisualizationDescriptors = getPropertyDescriptors(AudioVisualization);
-const audioVisualizationDescriptorsAdded = diff(audioVisualizationDescriptors, audioDescriptors);
-const audioVisualizationDescriptorsMissing = diff(audioDescriptors, audioVisualizationDescriptors);
+// const audioVisualizationDescriptors = getPropertyDescriptors(AudioVisualization);
+// const audioVisualizationDescriptorsAdded = diff(audioVisualizationDescriptors, audioDescriptors);
+// const audioVisualizationDescriptorsMissing = diff(audioDescriptors, audioVisualizationDescriptors);
 
-console.log("baseDescriptors", baseDescriptors);
-console.log("audioDescriptors", audioDescriptors);
-console.log("audioVisualizationDescriptors", audioVisualizationDescriptors);
-console.log("audioVisualizationDescriptorsAdded", audioVisualizationDescriptorsAdded);
-console.log("audioVisualizationDescriptorsMissing", audioVisualizationDescriptorsMissing);
-console.log("audioEvents", audioEvents);
-console.log("audioProperties", audioProperties);
-console.log("audioMethods", audioMethods);
-console.log("audioConstants", audioConstants);
-console.log("observedAttributes", observedAttributes);
+// console.log("baseDescriptors", baseDescriptors);
+// console.log("audioDescriptors", audioDescriptors);
+// console.log("audioVisualizationDescriptors", audioVisualizationDescriptors);
+// console.log("audioVisualizationDescriptorsAdded", audioVisualizationDescriptorsAdded);
+// console.log("audioVisualizationDescriptorsMissing", audioVisualizationDescriptorsMissing);
+// console.log("audioEvents", audioEvents);
+// console.log("audioProperties", audioProperties);
+// console.log("audioMethods", audioMethods);
+// console.log("audioConstants", audioConstants);
+// console.log("observedAttributes", observedAttributes);
 
 export default AudioVisualization;

@@ -98,8 +98,8 @@ class AudioVisualization extends HTMLElement {
     this._onpaint = null;
 
     this._animationCallback = () => {
-      this._requestAnimation();
-      this._dispatchPaintEvent();
+      //this._requestAnimation();
+      //this._dispatchPaintEvent();
     };
 
     const shadowRoot = this.attachShadow({ mode: "closed" });
@@ -193,24 +193,24 @@ class AudioVisualization extends HTMLElement {
 }
 
 // Copy audio attributes to AudioVisualization prototype
-audioAttributes.forEach((name) => Object.defineProperty(AudioVisualization.prototype, name, {
-  get: (audioDescriptors[name].boolean) ? function () { console.log(`${this.id || "(unknown)"}.${name} (get)`); return this.hasAttribute(audioDescriptors[name].attribute) } : function () { console.log(`${this.id || "(unknown)"}.${name} (get)`); return this.getAttribute(audioDescriptors[name].attribute) },
-  set: (audioDescriptors[name].boolean) ? function (value) { console.log(`${this.id || "(unknown)"}.${name} (set)`, { value }); if (value) { this.setAttribute(audioDescriptors[name].attribute, ""); } else { this.removeAttribute(audioDescriptors[name].attribute); } } : function (value) { console.log(`${this.id || "(unknown)"}.${name} (set)`, { value }); this.setAttribute(audioDescriptors[name].attribute, value); },
+audioAttributes.map((name) => [name, audioDescriptors[name]]).forEach(([name, descriptor]) => Object.defineProperty(AudioVisualization.prototype, name, {
+  get: (descriptor.boolean) ? function () { return this.hasAttribute(descriptor.attribute) } : function () { return this.getAttribute(descriptor.attribute) },
+  set: (descriptor.boolean) ? function (value) { if (value) { this.setAttribute(descriptor.attribute, ""); } else { this.removeAttribute(descriptor.attribute); } } : function (value) { this.setAttribute(descriptor.attribute, value); },
   enumerable: false,
   configurable: true
 }));
 
 // Copy audio properties to AudioVisualization prototype
-audioProperties.forEach((name) => Object.defineProperty(AudioVisualization.prototype, name, {
-  get: (typeof audioDescriptors[name].get === "function") ? function () { console.log(`${this.id || "(unknown)"}.${name} (get)`); return this._audioElement[name]; } : undefined,
-  set: (typeof audioDescriptors[name].set === "function") ? function (value) { console.log(`${this.id || "(unknown)"}.${name} (set)`, { value }); this._audioElement[name] = value; } : undefined,
+audioProperties.map((name) => [name, audioDescriptors[name]]).forEach(([name, descriptor]) => Object.defineProperty(AudioVisualization.prototype, name, {
+  get: (typeof descriptor.get === "function") ? function () { return this._audioElement[name]; } : undefined,
+  set: (typeof descriptor.set === "function") ? function (value) { this._audioElement[name] = value; } : undefined,
   enumerable: false,
   configurable: true
 }));
 
 // Copy audio methods to AudioVisualization prototype
 audioMethods.forEach((name) => Object.defineProperty(AudioVisualization.prototype, name, {
-  value: function (...args) { console.log(`${this.id || "(unknown)"}.${name}`, { args }); return this._audioElement[name](...args); },
+  value: function (...args) { return this._audioElement[name](...args); },
   writable: true,
   enumerable: false,
   configurable: true

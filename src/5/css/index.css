@@ -41,3 +41,7 @@ audio-visualization {
 audio-visualization.adopted {
   background-color: #00f;
 }
+
+span.unsupported {
+  color: #f00;
+}

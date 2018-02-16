@@ -95,7 +95,7 @@ class AudioVisualization extends HTMLElement {
 
     this._animationCallback = () => {
       this._requestAnimation();
-      this._dispatchPaintEvent();
+      //this._dispatchPaintEvent();
     };
 
     const shadowRoot = this.attachShadow({ mode: "closed" });
@@ -172,7 +172,8 @@ class AudioVisualization extends HTMLElement {
   _dispatchAudioEvent(event) {
     //console.log(`${this.id || "(unknown)"}._dispatchAudioEvent`, { event });
 
-    this.dispatchEvent(new Event(event.type, event));
+    const newEvent =  new event.constructor(event.type, event);
+    this.dispatchEvent(newEvent);
   }
 
   _dispatchPaintEvent() {

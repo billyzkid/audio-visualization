@@ -1,3 +1,11 @@
+function diff(obj1, obj2) {
+  const keys1 = Object.keys(obj1);
+  const keys2 = Object.keys(obj2);
+  const sources = keys1.filter((key) => !keys2.includes(key)).map((key) => ({ [key]: obj1[key] }));
+
+  return Object.assign({}, ...sources);
+}
+
 function getPrototypeChain(obj) {
   const prototypes = [];
   let prototype = obj.prototype;
@@ -17,16 +25,8 @@ function getPropertyDescriptors(obj) {
   return Object.assign({}, ...descriptors);
 }
 
-function diff(obj1, obj2) {
-  const keys1 = Object.keys(obj1);
-  const keys2 = Object.keys(obj2);
-  const sources = keys1.filter((key) => !keys2.includes(key)).map((key) => ({ [key]: obj1[key] }));
-
-  return Object.assign({}, ...sources);
-}
-
 export {
+  diff,
   getPrototypeChain,
-  getPropertyDescriptors,
-  diff
+  getPropertyDescriptors
 };

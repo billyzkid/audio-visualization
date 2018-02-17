@@ -172,8 +172,7 @@ class AudioVisualization extends HTMLElement {
   _dispatchAudioEvent(event) {
     //console.log(`${this.id || "(unknown)"}._dispatchAudioEvent`, { event });
 
-    const newEvent =  new event.constructor(event.type, event);
-    this.dispatchEvent(newEvent);
+    this.dispatchEvent(new event.constructor(event.type, event));
   }
 
   _dispatchPaintEvent() {

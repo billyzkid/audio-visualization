@@ -1,0 +1,47 @@
+html.fullscreen {
+  height: 100%;
+}
+
+html.fullscreen body {
+  display: block;
+  height: 100%;
+  margin: 0;
+}
+
+html.fullscreen body>* {
+  display: block;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  margin: 10px;
+}
+
+body>* {
+  margin: 10px;
+}
+
+audio {
+  background-color: #666;
+}
+
+video {
+  background-color: #f00;
+}
+
+audio-visualization {
+  background-color: #0f0;
+}
+
+audio-visualization.adopted {
+  background-color: #00f;
+}
+
+span.unsupported {
+  color: #f00;
+}

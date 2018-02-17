@@ -8,12 +8,12 @@
     <script src="js/index.js" type="module"></script>
   </head>
   <body>
-    <!-- <audio-visualization id="myAudioVisualization" controls onclick="console.log(event);" onpaint="console.log(event);">Audio Visualization Unsupported</audio-visualization> -->
-    <!-- <video id="myVideo" controls onclick="console.log(event);">Video Unsupported</video> -->
     <!-- <audio id="myAudio" controls onclick="console.log(event);">Audio Unsupported</audio> -->
+    <!-- <video id="myVideo" controls onclick="console.log(event);">Video Unsupported</video> -->
 
-    <audio-visualization id="myAudio" controls onpaint="console.log(event);" src="/content/audio/new_year_dubstep_minimix.ogg">
-      <span class="unsupported">Audio Unsupported</span>
+    <audio-visualization id="myAudioVisualization" onpaint="console.log(event);" controls>
+      <source src="/content/audio/new_year_dubstep_minimix.ogg" type="audio/ogg" />
+      <span class="unsupported">Audio Visualization Unsupported</span>
     </audio-visualization>
 
   </body>

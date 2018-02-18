@@ -26,12 +26,16 @@ body>* {
   margin: 10px;
 }
 
+span.unsupported {
+  color: #f00;
+}
+
 audio {
   background-color: #666;
 }
 
 video {
-  background-color: #f00;
+  background-color: #000;
 }
 
 audio-visualization {
@@ -42,6 +46,6 @@ audio-visualization.adopted {
   background-color: #00f;
 }
 
-span.unsupported {
-  color: #f00;
+audio-visualization:not(:defined) {
+  display: none;
 }

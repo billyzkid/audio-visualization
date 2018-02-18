@@ -76,30 +76,32 @@ class AudioVisualization extends HTMLElement {
 
     //console.log(`${this.id || "(unknown)"}.constructor`);
 
-    const shadowNode = template.content.cloneNode(true);
-    const audioElement = shadowNode.querySelector("audio");
-    const canvasElement = shadowNode.querySelector("canvas");
+    const shadowRoot = this.attachShadow({ mode: "closed" });
+    shadowRoot.appendChild(template.content.cloneNode(true));
 
-    const audioContext = new AudioContext();
-    const audioSourceNode = audioContext.createMediaElementSource(audioElement);
-    const audioGainNode = audioContext.createGain();
-    const audioAnalyserNode = audioContext.createAnalyser();
-    const audioDestinationNode = audioSourceNode.connect(audioGainNode).connect(audioAnalyserNode).connect(audioContext.destination);
-
-    const audioEventHandler = (event) => this._dispatchAudioEvent(event);
-    audioEvents.forEach((name) => audioElement[name] = audioEventHandler);
-
-    this._audioElement = audioElement;
-    this._canvasContext = canvasElement.getContext("2d");
+    this._audioElement = shadowRoot.querySelector("audio");
+    this._canvasContext = shadowRoot.querySelector("canvas").getContext("2d");
+    this._audioContext = null;
     this._onpaint = null;
 
     this._animationCallback = () => {
       this._requestAnimation();
-      //this._dispatchPaintEvent();
+      this._dispatchPaintEvent();
     };
 
-    const shadowRoot = this.attachShadow({ mode: "closed" });
-    shadowRoot.appendChild(shadowNode);
+    // See https://developers.google.com/web/updates/2017/09/autoplay-policy-changes#webaudio
+    this._audioElement.addEventListener("play", () => {
+      if (!this._audioContext) {
+        this._audioContext = new AudioContext();
+        const audioSourceNode = this._audioContext.createMediaElementSource(this._audioElement);
+        const audioGainNode = this._audioContext.createGain();
+        const audioAnalyserNode = this._audioContext.createAnalyser();
+        const audioDestinationNode = audioSourceNode.connect(audioGainNode).connect(audioAnalyserNode).connect(this._audioContext.destination);
+      }
+    });
+
+    const audioEventHandler = (event) => this._dispatchAudioEvent(event);
+    audioEvents.forEach((key) => this._audioElement[key] = audioEventHandler);
   }
 
   static get observedAttributes() {

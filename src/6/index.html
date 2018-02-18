@@ -8,11 +8,20 @@
     <script src="js/index.js" type="module"></script>
   </head>
   <body>
-    <!-- <audio id="myAudio" controls onclick="console.log(event);">Audio Unsupported</audio> -->
-    <!-- <video id="myVideo" controls onclick="console.log(event);">Video Unsupported</video> -->
+    <!-- monitorEvents(myAudioVisualization, ["paint", "abort", "canplay", "canplaythrough", "cuechange", "durationchange", "emptied", "encrypted", "ended", "error", "loadeddata", "loadedmetadata", "loadstart", "pause", "play", "playing", "progress", "ratechange", "seeked", "seeking", "stalled", "suspend", "timeupdate", "volumechange", "waiting", "waitingforkey"]); -->
 
-    <audio-visualization id="myAudioVisualization" onpaint="console.log(event);" controls>
-      <source src="/content/audio/new_year_dubstep_minimix.ogg" type="audio/ogg" />
+    <audio id="myAudio" src="/content/audio/new_year_dubstep_minimix.ogg" controls>
+      <!-- <source src="/content/audio/new_year_dubstep_minimix.ogg" type="audio/ogg" /> -->
+      <span class="unsupported">Audio Unsupported</span>
+    </audio>
+
+    <video id="myVideo" src="/content/audio/new_year_dubstep_minimix.ogg" controls>
+      <!-- <source src="/content/audio/new_year_dubstep_minimix.ogg" type="audio/ogg" /> -->
+      <span class="unsupported">Video Unsupported</span>
+    </video>
+
+    <audio-visualization id="myAudioVisualization" src="/content/audio/new_year_dubstep_minimix.ogg" controls>
+      <!-- <source src="/content/audio/new_year_dubstep_minimix.ogg" type="audio/ogg" /> -->
       <span class="unsupported">Audio Visualization Unsupported</span>
     </audio-visualization>
 

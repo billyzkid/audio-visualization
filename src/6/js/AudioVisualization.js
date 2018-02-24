@@ -80,7 +80,9 @@ class AudioVisualization extends HTMLElement {
     shadowRoot.appendChild(template.content.cloneNode(true));
 
     this._audioElement = shadowRoot.querySelector("audio");
-    this._canvasContext = shadowRoot.querySelector("canvas").getContext("2d");
+    this._canvasElement = shadowRoot.querySelector("canvas");
+    this._canvasContext = this._canvasElement.getContext("2d");
+    this._audioSourceNode = null;
     this._audioContext = null;
     this._onpaint = null;
 
@@ -89,23 +91,45 @@ class AudioVisualization extends HTMLElement {
       this._dispatchPaintEvent();
     };
 
-    // See https://developers.google.com/web/updates/2017/09/autoplay-policy-changes#webaudio
-    this._audioElement.addEventListener("play", () => {
-      if (!this._audioContext) {
-        this._audioContext = new AudioContext();
-        const audioSourceNode = this._audioContext.createMediaElementSource(this._audioElement);
-        const audioGainNode = this._audioContext.createGain();
-        const audioAnalyserNode = this._audioContext.createAnalyser();
-        const audioDestinationNode = audioSourceNode.connect(audioGainNode).connect(audioAnalyserNode).connect(this._audioContext.destination);
-      }
-    });
-
     const audioEventHandler = (event) => this._dispatchAudioEvent(event);
     audioEvents.forEach((key) => this._audioElement[key] = audioEventHandler);
   }
 
   static get observedAttributes() {
+    //console.log("AudioVisualization.observedAttributes (get)");
+
     return observedAttributes;
+  }
+
+  get audioContext() {
+    //console.log(`${this.id || "(unknown)"}.audioContext (get)`);
+
+    return this._audioContext;
+  }
+
+  set audioContext(value) {
+    //console.log(`${this.id || "(unknown)"}.audioContext (set)`, { value });
+
+    const oldValue = this._audioContext;
+    const newValue = value || null;
+
+    if (oldValue) {
+      this._audioSourceNode.disconnect(oldValue.destination);
+      this._audioSourceNode = null;
+    }
+
+    if (newValue) {
+      this._audioSourceNode = newValue.createMediaElementSource(this._audioElement);
+      this._audioSourceNode.connect(newValue.destination);
+    }
+
+    this._audioContext = newValue;
+  }
+
+  get canvasContext() {
+    //console.log(`${this.id || "(unknown)"}.canvasContext (get)`);
+
+    return this._canvasContext;
   }
 
   get onpaint() {

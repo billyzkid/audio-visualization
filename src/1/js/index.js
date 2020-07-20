@@ -6,7 +6,7 @@
 */
 
 var media = [
-      "/audio/new_year_dubstep_minimix.ogg"
+      "/content/audio/new_year_dubstep_minimix.ogg"
    ],
     fftSize = 1024,
     // [32, 64, 128, 256, 512, 1024, 2048]

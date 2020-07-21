@@ -4,9 +4,16 @@ const PI_TWO = Math.PI * 2;
 const PI_HALF = Math.PI / 180;
 
 const fftSize = 1024;
-const TOTAL_POINTS = fftSize / 2;
+
+const TOTAL_STARS = 1500;
+const TOTAL_POINTS = 512;
 const TOTAL_AVG_POINTS = 64;
+const STARS_BREAK_POINT = 140;
 const AVG_BREAK_POINT = 100;
+
+const stars_color_1 = "#465677",
+const stars_color_2 = "#B5BFD4",
+const stars_color_3 = "#F451BA",
 
 const bubble_avg_tick = 0.001;
 const bubble_avg_color = "rgba(29, 36, 57, 0.1)";
@@ -21,6 +28,7 @@ class Visualization {
     }
 
     this.element = element;
+    this.stars = [];
     this.points = [];
     this.avg_points = [];
   }
@@ -90,6 +98,21 @@ class Visualization {
 
             this.frequencyData = new Uint8Array(this.analyser.frequencyBinCount);
             this.timeData = new Uint8Array(this.analyser.frequencyBinCount);
+
+            var canvasWidth = this.renderingContext.canvas.offsetWidth;
+            var canvasHeight = this.renderingContext.canvas.offsetHeight;
+        
+            for (var i = 0; i < TOTAL_STARS; i++) {
+              this.stars.push(new Star(i, canvasWidth, canvasHeight));
+            }
+            
+            for (var i = 0; i < TOTAL_POINTS; i++) {
+              this.points.push(new Point(i, canvasWidth, canvasHeight));
+            }
+        
+            for (var i = 0; i < TOTAL_AVG_POINTS; i++) {
+              this.avg_points.push(new AvgPoint(i, canvasWidth, canvasHeight));
+            }
 
             // resolve({ renderingContext, audioContext, audioBuffer });
             resolve();
@@ -219,17 +242,6 @@ class Visualization {
 
     window.requestAnimationFrame(this.animate.bind(this));
 
-    var canvasWidth = this.renderingContext.canvas.offsetWidth;
-    var canvasHeight = this.renderingContext.canvas.offsetHeight;
-
-    for (var i = 0; i < TOTAL_POINTS; i++) {
-      this.points.push(new Point(i, canvasWidth, canvasHeight));
-    }
-
-    for (var i = 0; i < TOTAL_AVG_POINTS; i++) {
-      this.avg_points.push(new AvgPoint(i, canvasWidth, canvasHeight));
-    }
-
     this.analyser.getByteFrequencyData(this.frequencyData);
     this.analyser.getByteTimeDomainData(this.timeData);
 
@@ -324,16 +336,19 @@ class Visualization {
 }
 
 class Star {
-  constructor() {
-    var xc, yc;
+  constructor(index, width, height) {
+    var w = width;
+    var h = height;
+    var cx = width / 2;
+    var cy = height / 2;
 
     this.x = Math.random() * w - cx;
     this.y = Math.random() * h - cy;
-    this.z = this.max_depth = Math.max(w/h);
+    this.z = this.max_depth = Math.max(w / h);
     this.radius = 0.2;
 
-    xc = this.x > 0 ? 1 : -1;
-    yc = this.y > 0 ? 1 : -1;
+    var xc = this.x > 0 ? 1 : -1;
+    var yc = this.y > 0 ? 1 : -1;
 
     if (Math.abs(this.x) > Math.abs(this.y)) {
         this.dx = 1.0;
@@ -347,28 +362,26 @@ class Star {
     this.dy *= yc;
     this.dz = -0.1;
 
-    this.ddx = .001 * this.dx;
-    this.ddy = .001 * this.dy;
+    this.ddx = 0.001 * this.dx;
+    this.ddy = 0.001 * this.dy;
 
-    if (this.y > (cy/2)) {
-        this.color = "#B5BFD4";
+    if (this.y > cy / 2) {
+      this.color = stars_color_2;
+    } else if (avg > AVG_BREAK_POINT + 10) {
+      this.color = stars_color_2;
+    } else if (avg > STARS_BREAK_POINT) {
+      this.color = stars_color_3;
     } else {
-        if (avg > 110) {
-            this.color = "#B5BFD4";
-        } else if (avg > 140) {
-            this.color = "#F451BA";
-        } else {
-            this.color = "#465677";
-        }
+      this.color = stars_color_1;
     }
   }
 }
 
 class Point {
-  constructor(index, canvasWidth, canvasHeight) {
+  constructor(index, width, height) {
     this.index = index;
-    this.canvasWidth = canvasWidth;
-    this.canvasHeight = canvasHeight;
+    this.width = width;
+    this.height = height;
 
     this.angle = (this.index * 360) / TOTAL_POINTS;
     this.value = Math.random() * 256;
@@ -379,17 +392,17 @@ class Point {
   }
 
   updateDynamics() {
-    this.radius = Math.abs(this.canvasWidth, this.canvasHeight) / 10;
-    this.x = (this.canvasWidth / 2) + this.radius * Math.sin(PI_HALF * this.angle);
-    this.y = (this.canvasHeight / 2) + this.radius * Math.cos(PI_HALF * this.angle);
+    this.radius = Math.abs(this.width, this.height) / 10;
+    this.x = (this.width / 2) + this.radius * Math.sin(PI_HALF * this.angle);
+    this.y = (this.height / 2) + this.radius * Math.cos(PI_HALF * this.angle);
   }
 }
 
 class AvgPoint {
-  constructor(index, canvasWidth, canvasHeight) {
+  constructor(index, width, height) {
     this.index = index;
-    this.canvasWidth = canvasWidth;
-    this.canvasHeight = canvasHeight;
+    this.width = width;
+    this.height = height;
 
     this.angle = (this.index * 360) / TOTAL_AVG_POINTS;
     this.value = Math.random() * 256;
@@ -400,9 +413,9 @@ class AvgPoint {
   }
 
   updateDynamics() {
-    this.radius = Math.abs(this.canvasWidth, this.canvasHeight) / 10;
-    this.x = (this.canvasWidth / 2) + this.radius * Math.sin(PI_HALF * this.angle);
-    this.y = (this.canvasHeight / 2) + this.radius * Math.cos(PI_HALF * this.angle);
+    this.radius = Math.abs(this.width, this.height) / 10;
+    this.x = (this.width / 2) + this.radius * Math.sin(PI_HALF * this.angle);
+    this.y = (this.height / 2) + this.radius * Math.cos(PI_HALF * this.angle);
   }
 }
 

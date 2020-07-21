@@ -1,19 +1,18 @@
 //import Star from "./Star.js";
 
-const FFT_SIZE = 1024;
-const TOTAL_POINTS = 1024 / 2;
+const PI_TWO = Math.PI * 2;
+const PI_HALF = Math.PI / 180;
+
+const fftSize = 1024;
+const TOTAL_POINTS = fftSize / 2;
 const TOTAL_AVG_POINTS = 64;
+const AVG_BREAK_POINT = 100;
 
-const PI = Math.PI;
-const PI_TWO = PI * 2;
-const PI_HALF = PI / 180;
-
-var w = 0;
-var h = 0;
-var cx = 0;
-var cy = 0;
-var points = [];
-var avg_points = [];
+const bubble_avg_tick = 0.001;
+const bubble_avg_color = "rgba(29, 36, 57, 0.1)";
+const bubble_avg_color_2 = "rgba(29, 36, 57, 0.05)";
+const bubble_avg_line_color = "rgba(77, 218, 248, 1)";
+const bubble_avg_line_color_2 = "rgba(77, 218, 248, 1)";
 
 class Visualization {
   constructor(element) {
@@ -22,6 +21,8 @@ class Visualization {
     }
 
     this.element = element;
+    this.points = [];
+    this.avg_points = [];
   }
 
   load(url) {
@@ -59,8 +60,9 @@ class Visualization {
       errorElement.className = "error hidden";
       element.appendChild(errorElement);
 
-      const renderingContext = this.getRenderingContext();
-      const audioContext = this.createAudioContext();
+      this.renderingContext = this.getRenderingContext();
+      this.audioContext = this.createAudioContext();
+
       const request = new XMLHttpRequest();
 
       this.onLoading("Loading Audio Buffer");
@@ -71,10 +73,26 @@ class Visualization {
         if (status < 400) {
           this.onLoading("Decoding Audio Data");
 
-          audioContext.decodeAudioData(response, (audioBuffer) => {
+          this.analyser = this.audioContext.createAnalyser();
+          this.analyser.fftSize = fftSize;
+          this.analyser.minDecibels = -100;
+          this.analyser.maxDecibels = -30;
+          this.analyser.smoothingTimeConstant = 0.8;
+
+          this.audioContext.decodeAudioData(response, (audioBuffer) => {
             this.onLoading("Ready");
 
-            resolve({ renderingContext, audioContext, audioBuffer });
+            this.audioBuffer = audioBuffer;
+
+            this.gainNode = this.audioContext.createGain();
+            this.gainNode.connect(this.analyser);
+            this.analyser.connect(this.audioContext.destination);
+
+            this.frequencyData = new Uint8Array(this.analyser.frequencyBinCount);
+            this.timeData = new Uint8Array(this.analyser.frequencyBinCount);
+
+            // resolve({ renderingContext, audioContext, audioBuffer });
+            resolve();
           }, (error) => {
             reject(error);
           });
@@ -111,14 +129,9 @@ class Visualization {
     const loadingElement = this.element.querySelector(".loading");
     loadingElement.classList.add("hidden");
 
-    const { renderingContext, audioContext, audioBuffer } = result;
-    this.render(renderingContext, audioContext, audioBuffer);
-
-    this.element.addEventListener("resize", this.onResize.bind(this), false);
-  }
-
-  onResize() {
-    console.log("Resize!");
+    //const { renderingContext, audioContext, audioBuffer } = result;
+    //this.render(renderingContext, audioContext, audioBuffer);
+    this.render();
   }
 
   onLoadFailed(error) {
@@ -148,10 +161,10 @@ class Visualization {
     event.preventDefault();
     this.play();
   }
-
+ 
   onPauseClick(event) {
     event.preventDefault();
-    this.pause();
+    this.play();
   }
 
   getRenderingContext() {
@@ -171,57 +184,141 @@ class Visualization {
 
   play() {
     console.log("Play!");
+    
+    this.playing = true;
+    
+    this.asource = this.audioContext.createBufferSource();
+    this.asource.buffer = this.audioBuffer;
+    this.asource.loop = true;
+    this.asource.connect(this.gainNode);
+    
+    this.startedAt = this.pausedAt ? Date.now() - this.pausedAt : Date.now();
+    this.pausedAt ? this.asource.start(0, this.pausedAt / 1000) : this.asource.start();
+
+    this.animate();
   }
 
   pause() {
     console.log("Pause!");
+
+    this.playing = false;
+
+    if (this.asource) {
+      this.asource.stop();
+    }
+
+    this.pausedAt = Date.now() - this.startedAt;
   }
 
   render(renderingContext, audioContext, audioBuffer) {
-    this.animate(renderingContext);
-    window.requestAnimationFrame(this.animate.bind(this, renderingContext));
+    this.animate();
   }
 
-  animate(ctx) {
+  animate() {
     console.log("Animate!");
 
+    window.requestAnimationFrame(this.animate.bind(this));
+
+    var canvasWidth = this.renderingContext.canvas.offsetWidth;
+    var canvasHeight = this.renderingContext.canvas.offsetHeight;
+
     for (var i = 0; i < TOTAL_POINTS; i++) {
-      points.push(new Point(i));
+      this.points.push(new Point(i, canvasWidth, canvasHeight));
     }
 
     for (var i = 0; i < TOTAL_AVG_POINTS; i++) {
-      avg_points.push(new AvgPoint(i));
+      this.avg_points.push(new AvgPoint(i, canvasWidth, canvasHeight));
     }
 
-    this.clearCanvas(ctx);
-    this.drawStarField(ctx);
-    this.drawAverageCircle(ctx);
-    this.drawWaveform(ctx);
+    this.analyser.getByteFrequencyData(this.frequencyData);
+    this.analyser.getByteTimeDomainData(this.timeData);
+
+    var values = [].slice.call(this.frequencyData);
+    var averageValue = values.reduce((a, b) => a + b) / values.length;
+    this.avg = averageValue * this.gainNode.gain.value;
+
+    this.clearCanvas();
+    this.drawStarField();
+    this.drawAverageCircle();
+    this.drawWaveform();
   }
 
-  clearCanvas(ctx) {
-    var gradient = ctx.createLinearGradient(0, 0, 0, 0);
+  clearCanvas() {
+    var canvasWidth = this.renderingContext.canvas.offsetWidth;
+    var canvasHeight = this.renderingContext.canvas.offsetHeight;
+    var gradient = this.renderingContext.createLinearGradient(0, 0, 0, canvasHeight);
+
     gradient.addColorStop(0, "#000011");
     gradient.addColorStop(0.96, "#060D1F");
     gradient.addColorStop(1, "#02243F");
 
-    ctx.beginPath();
-    ctx.globalCompositeOperation = "source-over";
-    ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, 0, 0);
-    ctx.fill();
-    ctx.closePath();
+    this.renderingContext.fillStyle = gradient;
+    this.renderingContext.globalCompositeOperation = "source-over";
+    this.renderingContext.beginPath();
+    this.renderingContext.fillRect(0, 0, canvasWidth, canvasHeight);
+    this.renderingContext.fill();
+    this.renderingContext.closePath();
   }
 
-  drawStarField(ctx) {
-
-  }
-
-  drawAverageCircle(ctx) {
+  drawStarField() {
 
   }
 
-  drawWaveform(ctx) {
+  drawAverageCircle() {
+    var i, len, p, value, xc, yc;
+    var rotation  = 0;
+
+    var cx = this.renderingContext.canvas.offsetWidth / 2;
+    var cy = this.renderingContext.canvas.offsetHeight / 2;
+
+    if (this.avg > AVG_BREAK_POINT) {
+        rotation += -bubble_avg_tick;
+        value = this.avg + random() * 10;
+        this.renderingContext.strokeStyle = bubble_avg_line_color_2;
+        this.renderingContext.fillStyle = bubble_avg_color_2;
+    } else {
+        rotation += bubble_avg_tick;
+        value = this.avg;
+        this.renderingContext.strokeStyle = bubble_avg_line_color;
+        this.renderingContext.fillStyle = bubble_avg_color;
+    }
+
+    this.renderingContext.beginPath();
+    this.renderingContext.lineWidth = 1;
+    this.renderingContext.lineCap = "round";
+
+    this.renderingContext.save();
+    this.renderingContext.translate(cx, cy);
+    this.renderingContext.rotate(rotation);
+    this.renderingContext.translate(-cx, -cy);
+    this.renderingContext.moveTo(this.avg_points[0].dx, this.avg_points[0].dy);
+
+    for (var i = 0, len = TOTAL_AVG_POINTS; i < len - 1; i++) {
+        p = this.avg_points[i];
+        p.dx = p.x + value * Math.sin(PI_HALF * p.angle);
+        p.dy = p.y + value * Math.cos(PI_HALF * p.angle);
+        xc = (p.dx + this.avg_points[i+1].dx) / 2;
+        yc = (p.dy + this.avg_points[i+1].dy) / 2;
+
+        this.renderingContext.quadraticCurveTo(p.dx, p.dy, xc, yc);
+    }
+
+    p = this.avg_points[i];
+    p.dx = p.x + value * Math.sin(PI_HALF * p.angle);
+    p.dy = p.y + value * Math.cos(PI_HALF * p.angle);
+    xc = (p.dx + this.avg_points[0].dx) / 2;
+    yc = (p.dy + this.avg_points[0].dy) / 2;
+
+    this.renderingContext.quadraticCurveTo(p.dx, p.dy, xc, yc);
+    this.renderingContext.quadraticCurveTo(xc, yc, this.avg_points[0].dx, this.avg_points[0].dy);
+
+    this.renderingContext.stroke();
+    this.renderingContext.fill();
+    this.renderingContext.restore();
+    this.renderingContext.closePath();
+  }
+
+  drawWaveform() {
 
   }
 }
@@ -268,8 +365,11 @@ class Star {
 }
 
 class Point {
-  constructor(index) {
+  constructor(index, canvasWidth, canvasHeight) {
     this.index = index;
+    this.canvasWidth = canvasWidth;
+    this.canvasHeight = canvasHeight;
+
     this.angle = (this.index * 360) / TOTAL_POINTS;
     this.value = Math.random() * 256;
     this.dx = this.x + this.value * Math.sin(PI_HALF * this.angle);
@@ -279,15 +379,18 @@ class Point {
   }
 
   updateDynamics() {
-    this.radius = Math.abs(w, h) / 10;
-    this.x = cx + this.radius * Math.sin(PI_HALF * this.angle);
-    this.y = cy + this.radius * Math.cos(PI_HALF * this.angle);
+    this.radius = Math.abs(this.canvasWidth, this.canvasHeight) / 10;
+    this.x = (this.canvasWidth / 2) + this.radius * Math.sin(PI_HALF * this.angle);
+    this.y = (this.canvasHeight / 2) + this.radius * Math.cos(PI_HALF * this.angle);
   }
 }
 
 class AvgPoint {
-  constructor(index) {
+  constructor(index, canvasWidth, canvasHeight) {
     this.index = index;
+    this.canvasWidth = canvasWidth;
+    this.canvasHeight = canvasHeight;
+
     this.angle = (this.index * 360) / TOTAL_AVG_POINTS;
     this.value = Math.random() * 256;
     this.dx = this.x + this.value * Math.sin(PI_HALF * this.angle);
@@ -297,9 +400,9 @@ class AvgPoint {
   }
 
   updateDynamics() {
-    this.radius = Math.abs(w, h) / 10;
-    this.x = cx + this.radius * Math.sin(PI_HALF * this.angle);
-    this.y = cy + this.radius * Math.cos(PI_HALF * this.angle);
+    this.radius = Math.abs(this.canvasWidth, this.canvasHeight) / 10;
+    this.x = (this.canvasWidth / 2) + this.radius * Math.sin(PI_HALF * this.angle);
+    this.y = (this.canvasHeight / 2) + this.radius * Math.cos(PI_HALF * this.angle);
   }
 }
 

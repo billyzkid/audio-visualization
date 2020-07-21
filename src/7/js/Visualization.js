@@ -11,9 +11,9 @@ const TOTAL_AVG_POINTS = 64;
 const STARS_BREAK_POINT = 140;
 const AVG_BREAK_POINT = 100;
 
-const stars_color_1 = "#465677",
-const stars_color_2 = "#B5BFD4",
-const stars_color_3 = "#F451BA",
+const stars_color_1 = "#465677";
+const stars_color_2 = "#B5BFD4";
+const stars_color_3 = "#F451BA";
 
 const bubble_avg_tick = 0.001;
 const bubble_avg_color = "rgba(29, 36, 57, 0.1)";
@@ -68,6 +68,19 @@ class Visualization {
       errorElement.className = "error hidden";
       element.appendChild(errorElement);
 
+      // Handle resize events
+      element.handleResize = this.onResize.bind(this);
+
+      const resizeObserver = new ResizeObserver(entries => {
+        for (let entry of entries) {
+          if (entry.target.handleResize) {
+            entry.target.handleResize();
+          }
+        }
+      });
+
+      resizeObserver.observe(element);
+
       this.renderingContext = this.getRenderingContext();
       this.audioContext = this.createAudioContext();
 
@@ -91,30 +104,31 @@ class Visualization {
             this.onLoading("Ready");
 
             this.audioBuffer = audioBuffer;
-
             this.gainNode = this.audioContext.createGain();
             this.gainNode.connect(this.analyser);
             this.analyser.connect(this.audioContext.destination);
 
-            this.frequencyData = new Uint8Array(this.analyser.frequencyBinCount);
-            this.timeData = new Uint8Array(this.analyser.frequencyBinCount);
+            const frequencyData = new Uint8Array(this.analyser.frequencyBinCount);
+            const timeData = new Uint8Array(this.analyser.frequencyBinCount);
 
-            var canvasWidth = this.renderingContext.canvas.offsetWidth;
-            var canvasHeight = this.renderingContext.canvas.offsetHeight;
+            this.analyser.getByteFrequencyData(frequencyData);
+            this.analyser.getByteTimeDomainData(timeData);
         
+            const avgValues = [].slice.call(frequencyData);
+            this.avg = avgValues.reduce((a, b) => a + b) / avgValues.length * this.gainNode.gain.value;
+
             for (var i = 0; i < TOTAL_STARS; i++) {
-              this.stars.push(new Star(i, canvasWidth, canvasHeight));
+              this.stars.push(new Star(this));
             }
             
             for (var i = 0; i < TOTAL_POINTS; i++) {
-              this.points.push(new Point(i, canvasWidth, canvasHeight));
+              this.points.push(new Point(this, i));
             }
         
             for (var i = 0; i < TOTAL_AVG_POINTS; i++) {
-              this.avg_points.push(new AvgPoint(i, canvasWidth, canvasHeight));
+              this.avg_points.push(new AvgPoint(this, i));
             }
 
-            // resolve({ renderingContext, audioContext, audioBuffer });
             resolve();
           }, (error) => {
             reject(error);
@@ -140,21 +154,24 @@ class Visualization {
     return this.load(this.url);
   }
 
+  onResize() {
+    console.log("Resize!");
+
+    this.points.forEach(p => p.update());
+    this.avg_points.forEach(p => p.update());
+  }
+
   onLoading(step) {
     const loadingElement = this.element.querySelector(".loading");
     loadingElement.innerHTML = `<h1>Loading&hellip;</h1><p>&ndash; ${step} &ndash;</p>`;
     loadingElement.classList.remove("hidden");
   }
 
-  onLoadCompleted(result) {
-    console.log(result);
-
+  onLoadCompleted() {
     const loadingElement = this.element.querySelector(".loading");
     loadingElement.classList.add("hidden");
 
-    //const { renderingContext, audioContext, audioBuffer } = result;
-    //this.render(renderingContext, audioContext, audioBuffer);
-    this.render();
+    this.animate();
   }
 
   onLoadFailed(error) {
@@ -233,21 +250,10 @@ class Visualization {
     this.pausedAt = Date.now() - this.startedAt;
   }
 
-  render(renderingContext, audioContext, audioBuffer) {
-    this.animate();
-  }
-
   animate() {
     console.log("Animate!");
 
     window.requestAnimationFrame(this.animate.bind(this));
-
-    this.analyser.getByteFrequencyData(this.frequencyData);
-    this.analyser.getByteTimeDomainData(this.timeData);
-
-    var values = [].slice.call(this.frequencyData);
-    var averageValue = values.reduce((a, b) => a + b) / values.length;
-    this.avg = averageValue * this.gainNode.gain.value;
 
     this.clearCanvas();
     this.drawStarField();
@@ -256,9 +262,9 @@ class Visualization {
   }
 
   clearCanvas() {
-    var canvasWidth = this.renderingContext.canvas.offsetWidth;
-    var canvasHeight = this.renderingContext.canvas.offsetHeight;
-    var gradient = this.renderingContext.createLinearGradient(0, 0, 0, canvasHeight);
+    var width = this.element.offsetWidth;
+    var height = this.element.offsetHeight;
+    var gradient = this.renderingContext.createLinearGradient(0, 0, 0, height);
 
     gradient.addColorStop(0, "#000011");
     gradient.addColorStop(0.96, "#060D1F");
@@ -267,21 +273,46 @@ class Visualization {
     this.renderingContext.fillStyle = gradient;
     this.renderingContext.globalCompositeOperation = "source-over";
     this.renderingContext.beginPath();
-    this.renderingContext.fillRect(0, 0, canvasWidth, canvasHeight);
+    this.renderingContext.fillRect(0, 0, width, height);
     this.renderingContext.fill();
     this.renderingContext.closePath();
   }
 
   drawStarField() {
+    var cx = this.element.offsetWidth / 2;
+    var cy = this.element.offsetHeight / 2;
 
+    for (var i = 0; i < this.stars.length; i++) {
+        var star = this.stars[i];
+        var tick = (this.avg > AVG_BREAK_POINT) ? (this.avg / 20) : (this.avg / 50);
+
+        star.x += star.dx * tick;
+        star.y += star.dy * tick;
+        star.z += star.dz;
+        star.dx += star.ddx;
+        star.dy += star.ddy;
+        star.radius = 0.2 + ((star.max_depth - star.z) * 0.1);
+
+        if (star.x < -cx || star.x > cx || star.y < -cy || star.y > cy) {
+            this.stars[i] = new Star(this);
+            continue;
+        }
+
+        this.renderingContext.fillStyle = star.color;
+        this.renderingContext.globalCompositeOperation = "lighter";
+        this.renderingContext.beginPath();
+        this.renderingContext.arc(star.x + cx, star.y + cy, star.radius, PI_TWO, false);
+        this.renderingContext.fill();
+        this.renderingContext.closePath();
+    }
   }
 
   drawAverageCircle() {
     var i, len, p, value, xc, yc;
     var rotation  = 0;
 
-    var cx = this.renderingContext.canvas.offsetWidth / 2;
-    var cy = this.renderingContext.canvas.offsetHeight / 2;
+    var cx = this.element.offsetWidth / 2;
+    var cy = this.element.offsetHeight / 2;
 
     if (this.avg > AVG_BREAK_POINT) {
         rotation += -bubble_avg_tick;
@@ -336,15 +367,14 @@ class Visualization {
 }
 
 class Star {
-  constructor(index, width, height) {
-    var w = width;
-    var h = height;
-    var cx = width / 2;
-    var cy = height / 2;
+  constructor(visualization) {
+    const width = visualization.element.offsetWidth;
+    const height = visualization.element.offsetHeight;
+    const avg = visualization.avg;
 
-    this.x = Math.random() * w - cx;
-    this.y = Math.random() * h - cy;
-    this.z = this.max_depth = Math.max(w / h);
+    this.x = Math.random() * width - (width / 2);
+    this.y = Math.random() * height - (height / 2);
+    this.z = this.max_depth = Math.max(width / height);
     this.radius = 0.2;
 
     var xc = this.x > 0 ? 1 : -1;
@@ -365,7 +395,7 @@ class Star {
     this.ddx = 0.001 * this.dx;
     this.ddy = 0.001 * this.dy;
 
-    if (this.y > cy / 2) {
+    if (this.y > height / 4) {
       this.color = stars_color_2;
     } else if (avg > AVG_BREAK_POINT + 10) {
       this.color = stars_color_2;
@@ -378,44 +408,44 @@ class Star {
 }
 
 class Point {
-  constructor(index, width, height) {
-    this.index = index;
-    this.width = width;
-    this.height = height;
-
-    this.angle = (this.index * 360) / TOTAL_POINTS;
+  constructor(visualization, index) {
+    this.visualization = visualization;
+    this.angle = (index * 360) / TOTAL_POINTS;
     this.value = Math.random() * 256;
     this.dx = this.x + this.value * Math.sin(PI_HALF * this.angle);
     this.dy = this.y + this.value * Math.cos(PI_HALF * this.angle);
 
-    this.updateDynamics();
+    this.update();
   }
 
-  updateDynamics() {
-    this.radius = Math.abs(this.width, this.height) / 10;
-    this.x = (this.width / 2) + this.radius * Math.sin(PI_HALF * this.angle);
-    this.y = (this.height / 2) + this.radius * Math.cos(PI_HALF * this.angle);
+  update() {
+    const width = this.visualization.element.offsetWidth;
+    const height = this.visualization.element.offsetHeight;
+
+    this.radius = Math.abs(width, height) / 10;
+    this.x = (width / 2) + this.radius * Math.sin(PI_HALF * this.angle);
+    this.y = (height / 2) + this.radius * Math.cos(PI_HALF * this.angle);
   }
 }
 
 class AvgPoint {
-  constructor(index, width, height) {
-    this.index = index;
-    this.width = width;
-    this.height = height;
-
-    this.angle = (this.index * 360) / TOTAL_AVG_POINTS;
+  constructor(visualization, index) {
+    this.visualization = visualization;
+    this.angle = (index * 360) / TOTAL_AVG_POINTS;
     this.value = Math.random() * 256;
     this.dx = this.x + this.value * Math.sin(PI_HALF * this.angle);
     this.dy = this.y + this.value * Math.cos(PI_HALF * this.angle);
 
-    this.updateDynamics();
+    this.update();
   }
 
-  updateDynamics() {
-    this.radius = Math.abs(this.width, this.height) / 10;
-    this.x = (this.width / 2) + this.radius * Math.sin(PI_HALF * this.angle);
-    this.y = (this.height / 2) + this.radius * Math.cos(PI_HALF * this.angle);
+  update() {
+    const width = this.visualization.element.offsetWidth;
+    const height = this.visualization.element.offsetHeight;
+
+    this.radius = Math.abs(width, height) / 10;
+    this.x = (width / 2) + this.radius * Math.sin(PI_HALF * this.angle);
+    this.y = (height / 2) + this.radius * Math.cos(PI_HALF * this.angle);
   }
 }
 

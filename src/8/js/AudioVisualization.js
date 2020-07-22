@@ -24,42 +24,12 @@ const audioConstants = audioDescriptorKeys.filter((key) => !baseDescriptorKeys.i
 const observedAttributes = audioDescriptorKeys.filter((key) => !baseDescriptorKeys.includes(key) && audioDescriptors[key].hasOwnProperty("attribute")).map((key) => audioDescriptors[key].attribute).concat("onpaint").sort();
 
 const template = document.createElement("template");
-// template.innerHTML = `
-//   <style>
-//     :host {
-//       display: inline-block;
-//     }
-
-//     :host([hidden]) {
-//       display: none
-//     }
-
-//     div {
-//       display: flex;
-//       flex-direction: column;
-//     }
-
-//     canvas {
-//       width: 100%;
-//       background: #000;
-//     }
-
-//     audio {
-//       width: 100%;
-//     }
-//   </style>
-//   <div>
-//     <canvas></canvas>
-//     <audio>
-//       <slot></slot>
-//     </audio>
-//   </div>
-// `;
-
 template.innerHTML = `
   <style>
     :host {
-      display: inline-block;
+      display: inline-flex;
+      flex-direction: column;
+      justify-content: flex-end;
     }
 
     :host([hidden]) {
@@ -70,7 +40,6 @@ template.innerHTML = `
       position: relative;
       font-size: 14px;
       font-family: monospace;
-      background-color: #000;
     }
     
     canvas {
@@ -83,8 +52,6 @@ template.innerHTML = `
       position: absolute;
       top: 0;
       left: 0;
-      color: #fff;
-      background-color: #000;
       font-size: 0.9em;
       padding: 1em;
       cursor: pointer;
@@ -92,8 +59,8 @@ template.innerHTML = `
     
     div.loading {
       position: absolute;
-      left: 50%;
       top: 50%;
+      left: 50%;
       transform: translate(-50%, -50%);
       transition: all 400ms;
     }
@@ -121,8 +88,8 @@ template.innerHTML = `
     
     div.error {
       position: absolute;
-      left: 50%;
       top: 50%;
+      left: 50%;
       transform: translate(-50%, -50%);
       padding: 0.6em 1.2em;
       border: 0.2em solid #ff667f;
@@ -151,6 +118,11 @@ template.innerHTML = `
       color: inherit;
       cursor: pointer;
     }
+
+    audio {
+      width: 100%;
+      min-height: 54px;
+    }
   </style>
   <div class="visualization">
     <canvas></canvas>
@@ -159,6 +131,7 @@ template.innerHTML = `
     <div class="loading hidden"></div>
     <div class="error hidden"></div>
   </div>
+  <audio />
 `;
 
 class AudioVisualization extends HTMLElement {
@@ -171,7 +144,7 @@ class AudioVisualization extends HTMLElement {
     this._visualization = new Visualization();
     this._visualization.element = shadowRoot.querySelector("div.visualization");
     this._visualization.renderingContext = shadowRoot.querySelector("canvas").getContext("2d");
-    this._visualization.load("/content/audio/new_year_dubstep_minimix.ogg");
+    //this._visualization.load("/content/audio/new_year_dubstep_minimix.ogg");
 
     this._audioElement = shadowRoot.querySelector("audio");
     this._audioSourceNode = null;

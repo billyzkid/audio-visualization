@@ -1,3 +1,5 @@
+import * as Constants from "./Constants.js";
+
 class Star {
   constructor(visualization) {
     const width = visualization.element.offsetWidth;
@@ -13,11 +15,11 @@ class Star {
     var yc = this.y > 0 ? 1 : -1;
 
     if (Math.abs(this.x) > Math.abs(this.y)) {
-        this.dx = 1.0;
-        this.dy = Math.abs(this.y / this.x);
+      this.dx = 1.0;
+      this.dy = Math.abs(this.y / this.x);
     } else {
-        this.dx = Math.abs(this.x / this.y);
-        this.dy = 1.0;
+      this.dx = Math.abs(this.x / this.y);
+      this.dy = 1.0;
     }
 
     this.dx *= xc;
@@ -28,13 +30,13 @@ class Star {
     this.ddy = 0.001 * this.dy;
 
     if (this.y > height / 4) {
-      this.color = STARS_COLOR_2;
-    } else if (avg > AVG_BREAK_POINT + 10) {
-      this.color = STARS_COLOR_2;
-    } else if (avg > STARS_BREAK_POINT) {
-      this.color = STARS_COLOR_3;
+      this.color = Constants.STARS_COLOR_2;
+    } else if (avg > Constants.AVG_BREAK_POINT + 10) {
+      this.color = Constants.STARS_COLOR_2;
+    } else if (avg > Constants.STARS_BREAK_POINT) {
+      this.color = Constants.STARS_COLOR_3;
     } else {
-      this.color = STARS_COLOR_1;
+      this.color = Constants.STARS_COLOR_1;
     }
   }
 }

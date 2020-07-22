@@ -41,13 +41,13 @@ template.innerHTML = `
       font-size: 14px;
       font-family: monospace;
     }
-    
+
     canvas {
       display: block;
       width: 100%;
       height: 100%;
     }
-    
+
     a.play, a.pause {
       position: absolute;
       top: 0;
@@ -56,7 +56,7 @@ template.innerHTML = `
       padding: 1em;
       cursor: pointer;
     }
-    
+
     div.loading {
       position: absolute;
       top: 50%;
@@ -64,12 +64,12 @@ template.innerHTML = `
       transform: translate(-50%, -50%);
       transition: all 400ms;
     }
-    
+
     div.loading.hidden {
       opacity: 0;
       visibility: hidden;
     }
-    
+
     div.loading>h1 {
       margin: 0;
       font-size: 1em;
@@ -77,7 +77,7 @@ template.innerHTML = `
       text-align: center;
       color: #fff;
     }
-    
+
     div.loading>p {
       margin: 0.2em 0;
       font-size: 0.8em;
@@ -85,7 +85,7 @@ template.innerHTML = `
       text-transform: uppercase;
       color: #aaa;
     }
-    
+
     div.error {
       position: absolute;
       top: 50%;
@@ -96,29 +96,29 @@ template.innerHTML = `
       border-radius: 0.4em;
       background-color: #ff3354;
     }
-    
+
     div.error.hidden {
       opacity: 0;
       visibility: hidden;
     }
-    
+
     div.error>h1 {
       margin: 0;
       font-size: 1.2em;
       color: #ffe5ea;
     }
-    
+
     div.error>p {
       margin: 0.4em 0;
       font-size: 1em;
       color: #ffccd4;
     }
-    
+
     div.error>p>a {
       color: inherit;
       cursor: pointer;
     }
-
+    
     audio {
       width: 100%;
       min-height: 54px;

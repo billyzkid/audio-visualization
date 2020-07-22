@@ -57,6 +57,11 @@ template.innerHTML = `
       cursor: pointer;
     }
 
+    a.play.hidden, a.pause.hidden {
+      opacity: 0;
+      visibility: hidden;
+    }
+  
     div.loading {
       position: absolute;
       top: 50%;
@@ -126,8 +131,8 @@ template.innerHTML = `
   </style>
   <div class="visualization">
     <canvas></canvas>
-    <a class="play hidden"></a>
-    <a class="pause hidden"></a>
+    <a class="play hidden">Play</a>
+    <a class="pause">Pause</a>
     <div class="loading hidden"></div>
     <div class="error hidden"></div>
   </div>

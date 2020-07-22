@@ -36,7 +36,7 @@ class Visualization {
       element.appendChild(playElement);
 
       const pauseElement = document.createElement("a");
-      pauseElement.className = "pause hidden";
+      pauseElement.className = "pause";
       pauseElement.innerHTML = "Pause";
       pauseElement.addEventListener("click", this.onPauseClick.bind(this));
       element.appendChild(pauseElement);
@@ -187,7 +187,7 @@ class Visualization {
 
   onPauseClick(event) {
     event.preventDefault();
-    this.play();
+    this.pause();
   }
 
   createAudioContext() {
@@ -211,6 +211,9 @@ class Visualization {
     this.startedAt = this.pausedAt ? Date.now() - this.pausedAt : Date.now();
     this.pausedAt ? this.asource.start(0, this.pausedAt / 1000) : this.asource.start();
 
+    document.querySelector("a.play").classList.add("hidden");
+    document.querySelector("a.pause").classList.remove("hidden");
+
     this.animate();
   }
 
@@ -222,6 +225,9 @@ class Visualization {
     }
 
     this.pausedAt = Date.now() - this.startedAt;
+
+    document.querySelector("a.pause").classList.add("hidden");
+    document.querySelector("a.play").classList.remove("hidden");
   }
 
   animate() {

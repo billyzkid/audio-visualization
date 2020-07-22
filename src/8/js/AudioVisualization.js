@@ -29,7 +29,7 @@ template.innerHTML = `
     :host {
       display: inline-flex;
       flex-direction: column;
-      justify-content: flex-end;
+      align-items: flex-start;
     }
 
     :host([hidden]) {
@@ -37,6 +37,7 @@ template.innerHTML = `
     }
 
     div.visualization {
+      flex: auto;
       position: relative;
       font-size: 14px;
       font-family: monospace;
@@ -125,18 +126,18 @@ template.innerHTML = `
     }
     
     audio {
+      flex: none;
       width: 100%;
-      min-height: 54px;
     }
   </style>
   <div class="visualization">
     <canvas></canvas>
-    <a class="play hidden">Play</a>
-    <a class="pause">Pause</a>
+    <a class="play">Play</a>
+    <a class="pause hidden">Pause</a>
     <div class="loading hidden"></div>
     <div class="error hidden"></div>
   </div>
-  <audio />
+  <audio></audio>
 `;
 
 class AudioVisualization extends HTMLElement {

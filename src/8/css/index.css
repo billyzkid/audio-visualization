@@ -1,8 +1,17 @@
-html, body, audio-visualization {
+html {
   width: 100%;
   height: 100%;
 }
 
 body {
+  width: 100%;
+  height: 100%;
   margin: 0;
+}
+
+audio-visualization {
+  width: 100%;
+  height: 100%;
+  color: #fff;
+  background-color: #000;
 }

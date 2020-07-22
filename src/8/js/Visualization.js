@@ -4,12 +4,7 @@ import Point from "./Point.js";
 import AvgPoint from "./AvgPoint.js";
 
 class Visualization {
-  constructor(element) {
-    if (!element) {
-      throw new Error("Element required.");
-    }
-
-    this.element = element;
+  constructor() {
     this.stars = [];
     this.points = [];
     this.avg_points = [];
@@ -23,41 +18,13 @@ class Visualization {
     this.url = url;
 
     return new Promise((resolve, reject) => {
-      const element = this.element;
-      element.classList.add("visualization");
-      element.innerHTML = "";
-
-      const canvasElement = document.createElement("canvas");
-      element.appendChild(canvasElement);
-
-      const playElement = document.createElement("a");
-      playElement.className = "play hidden";
-      playElement.innerHTML = "Play";
-      playElement.addEventListener("click", this.onPlayClick.bind(this));
-      element.appendChild(playElement);
-
-      const pauseElement = document.createElement("a");
-      pauseElement.className = "pause hidden";
-      pauseElement.innerHTML = "Pause";
-      pauseElement.addEventListener("click", this.onPauseClick.bind(this));
-      element.appendChild(pauseElement);
-
-      const loadingElement = document.createElement("div");
-      loadingElement.className = "loading hidden";
-      element.appendChild(loadingElement);
-
-      const errorElement = document.createElement("div");
-      errorElement.className = "error hidden";
-      element.appendChild(errorElement);
 
       this.audioContext = this.createAudioContext();
 
-      this.renderingContext = canvasElement.getContext("2d");
       this.renderingContext.canvas.width = this.element.offsetWidth;
       this.renderingContext.canvas.height = this.element.offsetHeight;
 
-      // Handle resize events
-      element.handleResize = this.onResize.bind(this);
+      this.element.handleResize = this.onResize.bind(this);
 
       const resizeObserver = new ResizeObserver(entries => {
         for (let entry of entries) {
@@ -67,7 +34,7 @@ class Visualization {
         }
       });
 
-      resizeObserver.observe(element);
+      resizeObserver.observe(this.element);
 
       const request = new XMLHttpRequest();
 

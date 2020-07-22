@@ -5,4 +5,7 @@ import Visualization from "./Visualization.js";
 customElements.define("audio-visualization", AudioVisualization);
 
 // Assign an AudioContext to each element
-document.querySelectorAll("audio-visualization").forEach((element) => element.audioContext = new AudioContext());
+// document.querySelectorAll("audio-visualization").forEach((element) => {
+//     element.visualization = new Visualization();
+//     element.visualization.load("/content/audio/new_year_dubstep_minimix.ogg");
+// });

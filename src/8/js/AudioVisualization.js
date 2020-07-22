@@ -24,6 +24,38 @@ const audioConstants = audioDescriptorKeys.filter((key) => !baseDescriptorKeys.i
 const observedAttributes = audioDescriptorKeys.filter((key) => !baseDescriptorKeys.includes(key) && audioDescriptors[key].hasOwnProperty("attribute")).map((key) => audioDescriptors[key].attribute).concat("onpaint").sort();
 
 const template = document.createElement("template");
+// template.innerHTML = `
+//   <style>
+//     :host {
+//       display: inline-block;
+//     }
+
+//     :host([hidden]) {
+//       display: none
+//     }
+
+//     div {
+//       display: flex;
+//       flex-direction: column;
+//     }
+
+//     canvas {
+//       width: 100%;
+//       background: #000;
+//     }
+
+//     audio {
+//       width: 100%;
+//     }
+//   </style>
+//   <div>
+//     <canvas></canvas>
+//     <audio>
+//       <slot></slot>
+//     </audio>
+//   </div>
+// `;
+
 template.innerHTML = `
   <style>
     :host {
@@ -34,25 +66,98 @@ template.innerHTML = `
       display: none
     }
 
-    div {
-      display: flex;
-      flex-direction: column;
+    div.visualization {
+      position: relative;
+      font-size: 14px;
+      font-family: monospace;
+      background-color: #000;
     }
-
+    
     canvas {
+      display: block;
       width: 100%;
-      background: #000;
+      height: 100%;
     }
-
-    audio {
-      width: 100%;
+    
+    a.play, a.pause {
+      position: absolute;
+      top: 0;
+      left: 0;
+      color: #fff;
+      background-color: #000;
+      font-size: 0.9em;
+      padding: 1em;
+      cursor: pointer;
+    }
+    
+    div.loading {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      transition: all 400ms;
+    }
+    
+    div.loading.hidden {
+      opacity: 0;
+      visibility: hidden;
+    }
+    
+    div.loading>h1 {
+      margin: 0;
+      font-size: 1em;
+      font-weight: normal;
+      text-align: center;
+      color: #fff;
+    }
+    
+    div.loading>p {
+      margin: 0.2em 0;
+      font-size: 0.8em;
+      text-align: center;
+      text-transform: uppercase;
+      color: #aaa;
+    }
+    
+    div.error {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      padding: 0.6em 1.2em;
+      border: 0.2em solid #ff667f;
+      border-radius: 0.4em;
+      background-color: #ff3354;
+    }
+    
+    div.error.hidden {
+      opacity: 0;
+      visibility: hidden;
+    }
+    
+    div.error>h1 {
+      margin: 0;
+      font-size: 1.2em;
+      color: #ffe5ea;
+    }
+    
+    div.error>p {
+      margin: 0.4em 0;
+      font-size: 1em;
+      color: #ffccd4;
+    }
+    
+    div.error>p>a {
+      color: inherit;
+      cursor: pointer;
     }
   </style>
-  <div>
+  <div class="visualization">
     <canvas></canvas>
-    <audio>
-      <slot></slot>
-    </audio>
+    <a class="play hidden"></a>
+    <a class="pause hidden"></a>
+    <div class="loading hidden"></div>
+    <div class="error hidden"></div>
   </div>
 `;
 
@@ -60,15 +165,15 @@ class AudioVisualization extends HTMLElement {
   constructor() {
     super();
 
-    //console.log(`${this.id || "(unknown)"}.constructor`);
-    new Visualization(this);
-
     const shadowRoot = this.attachShadow({ mode: "closed" });
     shadowRoot.appendChild(template.content.cloneNode(true));
 
+    this._visualization = new Visualization();
+    this._visualization.element = shadowRoot.querySelector("div.visualization");
+    this._visualization.renderingContext = shadowRoot.querySelector("canvas").getContext("2d");
+    this._visualization.load("/content/audio/new_year_dubstep_minimix.ogg");
+
     this._audioElement = shadowRoot.querySelector("audio");
-    this._canvasElement = shadowRoot.querySelector("canvas");
-    this._canvasContext = this._canvasElement.getContext("2d");
     this._audioSourceNode = null;
     this._audioContext = null;
     this._onpaint = null;
@@ -79,7 +184,7 @@ class AudioVisualization extends HTMLElement {
     };
 
     const audioEventHandler = (event) => this._dispatchAudioEvent(event);
-    audioEvents.forEach((key) => this._audioElement[key] = audioEventHandler);
+    //audioEvents.forEach((key) => this._audioElement[key] = audioEventHandler);
   }
 
   static get observedAttributes() {
@@ -111,12 +216,6 @@ class AudioVisualization extends HTMLElement {
     }
 
     this._audioContext = newValue;
-  }
-
-  get canvasContext() {
-    //console.log(`${this.id || "(unknown)"}.canvasContext (get)`);
-
-    return this._canvasContext;
   }
 
   get onpaint() {

@@ -6,7 +6,7 @@ html {
 body {
   width: 100%;
   height: 100%;
-  margin: 0px;
+  margin: 0;
 }
 
 #viz-container {
@@ -15,17 +15,17 @@ body {
   height: 100%;
 }
 
-#button-container {
-  position: absolute;
-  top: 0px;
-  right: 0px;
-  display: flex;
-  flex-direction: column;
-}
-
 #viz1 {
   width: 100%;
   height: 100%;
+}
+
+#button-container {
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 #button1, #button2, #button3 {

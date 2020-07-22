@@ -1,10 +1,10 @@
 import * as Constants from "./Constants.js";
 
 class Point {
-  constructor(visualization, index) {
+  constructor(visualization, angle, value) {
     this.visualization = visualization;
-    this.angle = (index * 360) / Constants.TOTAL_POINTS;
-    this.value = Math.random() * 256;
+    this.angle = angle;
+    this.value = value;
 
     this.update();
   }

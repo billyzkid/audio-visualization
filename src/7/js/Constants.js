@@ -9,6 +9,7 @@ export const SMOOTHING_TIME = 0.8;
 export const TOTAL_STARS = 1500;
 export const TOTAL_POINTS = FFT_SIZE / 2;
 export const TOTAL_AVG_POINTS = 64;
+export const RANDOM_POINT_VALUE = 256;
 export const STARS_BREAK_POINT = 140;
 export const AVG_BREAK_POINT = 100;
 

@@ -1,7 +1,6 @@
 import * as Constants from "./Constants.js";
 import Star from "./Star.js";
 import Point from "./Point.js";
-import AvgPoint from "./AvgPoint.js";
 
 class Visualization {
   constructor(element) {
@@ -101,11 +100,15 @@ class Visualization {
             }
 
             for (var i = 0; i < Constants.TOTAL_POINTS; i++) {
-              this.points.push(new Point(this, i));
+              const angle = (i * 360) / Constants.TOTAL_POINTS;
+              const value = Math.random() * Constants.RANDOM_POINT_VALUE;
+              this.points.push(new Point(this, angle, value));
             }
 
             for (var i = 0; i < Constants.TOTAL_AVG_POINTS; i++) {
-              this.avg_points.push(new AvgPoint(this, i));
+              const angle = (i * 360) / Constants.TOTAL_AVG_POINTS;
+              const value = Math.random() * Constants.RANDOM_POINT_VALUE;
+              this.avg_points.push(new Point(this, angle, value));
             }
 
             resolve();

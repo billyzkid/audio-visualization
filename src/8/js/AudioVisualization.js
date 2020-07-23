@@ -1,27 +1,4 @@
 import Visualization from "./Visualization.js";
-import { getPropertyDescriptors, diff } from "./utilities.js";
-
-const baseDescriptors = getPropertyDescriptors(HTMLElement);
-const audioDescriptors = getPropertyDescriptors(HTMLAudioElement);
-
-Object.assign(audioDescriptors.autoplay, { attribute: "autoplay", empty: true });
-Object.assign(audioDescriptors.controls, { attribute: "controls", empty: true });
-Object.assign(audioDescriptors.crossOrigin, { attribute: "crossorigin", empty: false });
-Object.assign(audioDescriptors.defaultMuted, { attribute: "muted", empty: true });
-Object.assign(audioDescriptors.loop, { attribute: "loop", empty: true });
-Object.assign(audioDescriptors.onencrypted, { attribute: "onencrypted", empty: false });
-Object.assign(audioDescriptors.onwaitingforkey, { attribute: "onwaitingforkey", empty: false });
-Object.assign(audioDescriptors.preload, { attribute: "preload", empty: false });
-Object.assign(audioDescriptors.src, { attribute: "src", empty: false });
-
-const baseDescriptorKeys = Object.keys(baseDescriptors);
-const audioDescriptorKeys = Object.keys(audioDescriptors);
-
-const audioEvents = audioDescriptorKeys.filter((key) => /^on(abort|canplay|canplaythrough|cuechange|durationchange|emptied|encrypted|ended|error|loadeddata|loadedmetadata|loadstart|pause|play|playing|progress|ratechange|seeked|seeking|stalled|suspend|timeupdate|volumechange|waiting|waitingforkey)$/.test(key)).sort();
-const audioProperties = audioDescriptorKeys.filter((key) => !baseDescriptorKeys.includes(key) && (typeof audioDescriptors[key].get === "function" || typeof audioDescriptors[key].set === "function")).sort();
-const audioMethods = audioDescriptorKeys.filter((key) => !baseDescriptorKeys.includes(key) && typeof audioDescriptors[key].value === "function").sort();
-const audioConstants = audioDescriptorKeys.filter((key) => !baseDescriptorKeys.includes(key) && audioDescriptors[key].hasOwnProperty("value") && !audioDescriptors[key].writable).sort();
-const observedAttributes = audioDescriptorKeys.filter((key) => !baseDescriptorKeys.includes(key) && audioDescriptors[key].hasOwnProperty("attribute")).map((key) => audioDescriptors[key].attribute).concat("onpaint").sort();
 
 const template = document.createElement("template");
 template.innerHTML = `
@@ -41,6 +18,8 @@ template.innerHTML = `
       position: relative;
       font-size: 14px;
       font-family: monospace;
+      width: 100%;
+      height: 100%;
     }
 
     canvas {
@@ -49,21 +28,7 @@ template.innerHTML = `
       height: 100%;
     }
 
-    a.play, a.pause {
-      position: absolute;
-      top: 0;
-      left: 0;
-      font-size: 0.9em;
-      padding: 1em;
-      cursor: pointer;
-    }
-
-    a.play.hidden, a.pause.hidden {
-      opacity: 0;
-      visibility: hidden;
-    }
-  
-    div.loading {
+    #loading-container {
       position: absolute;
       top: 50%;
       left: 50%;
@@ -71,12 +36,7 @@ template.innerHTML = `
       transition: all 400ms;
     }
 
-    div.loading.hidden {
-      opacity: 0;
-      visibility: hidden;
-    }
-
-    div.loading>h1 {
+    #loading-container>h1 {
       margin: 0;
       font-size: 1em;
       font-weight: normal;
@@ -84,7 +44,7 @@ template.innerHTML = `
       color: #fff;
     }
 
-    div.loading>p {
+    #loading-container>p {
       margin: 0.2em 0;
       font-size: 0.8em;
       text-align: center;
@@ -92,7 +52,7 @@ template.innerHTML = `
       color: #aaa;
     }
 
-    div.error {
+    #error-container {
       position: absolute;
       top: 50%;
       left: 50%;
@@ -102,100 +62,283 @@ template.innerHTML = `
       border-radius: 0.4em;
       background-color: #ff3354;
     }
-
-    div.error.hidden {
-      opacity: 0;
-      visibility: hidden;
-    }
-
-    div.error>h1 {
+    
+    #error-container>h1 {
       margin: 0;
       font-size: 1.2em;
       color: #ffe5ea;
     }
 
-    div.error>p {
+    #error-container>p {
       margin: 0.4em 0;
       font-size: 1em;
       color: #ffccd4;
     }
 
-    div.error>p>a {
+    #error-container>p>a {
       color: inherit;
       cursor: pointer;
     }
-    
-    audio {
-      flex: none;
+
+    #loading-container.hidden,
+    #error-container.hidden {
+      opacity: 0;
+      visibility: hidden;
+    }
+
+    #play-pause-button { 
+      position: absolute;
+      top: 0;
       width: 100%;
+      height: 100%;
+      background: none;
+      outline: none;
+      border: none;
+      cursor: pointer;
+    }
+    
+    #play-pause-svg { 
+      width: 100px;
+      margin: 0 auto;
+      fill: #fff;
+      padding: 3rem;
+      transition: 0.6s opacity;
+      transition-delay: 0.4s;
+    }
+    
+    #play-pause-svg.playing {
+      opacity: 0;
     }
   </style>
   <div class="visualization">
     <canvas></canvas>
-    <a class="play">Play</a>
-    <a class="pause hidden">Pause</a>
-    <div class="loading hidden"></div>
-    <div class="error hidden"></div>
+    <button id="play-pause-button">
+      <svg id="play-pause-svg" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 50 50">
+        <polygon id="left-bar" points="12,0 25,11.5 25,39 12,50" />
+        <polygon id="right-bar" points="25,11.5 39.7,24.5 41.5,26 39.7,27.4 25,39" />
+        <animate id="left-to-pause" xlink:href="#left-bar" attributeName="points" to="7,3 19,3 19,47 7,47" dur="0.3s" begin="indefinite" fill="freeze" />
+        <animate id="left-to-play" xlink:href="#left-bar" attributeName="points" to="12,0 25,11.5 25,39 12,50" dur="0.3s" begin="indefinite" fill="freeze" />
+        <animate id="right-to-pause" xlink:href="#right-bar" attributeName="points" to="31,3 43,3 43,26 43,47 31,47" dur="0.3s" begin="indefinite" fill="freeze" />
+        <animate id="right-to-play" xlink:href="#right-bar" attributeName="points" to="25,11.5 39.7,24.5 41.5,26 39.7,27.4 25,39" dur="0.3s" begin="indefinite" fill="freeze" />
+      </svg>
+    </button>
+    <div id="loading-container" class="hidden"></div>
+    <div id="error-container" class="hidden"></div>
   </div>
-  <audio></audio>
 `;
 
 class AudioVisualization extends HTMLElement {
   constructor() {
     super();
 
+    this.paused = true;
+
     const shadowRoot = this.attachShadow({ mode: "closed" });
     shadowRoot.appendChild(template.content.cloneNode(true));
 
-    this._visualization = new Visualization();
-    this._visualization.element = shadowRoot.querySelector("div.visualization");
-    this._visualization.renderingContext = shadowRoot.querySelector("canvas").getContext("2d");
-    //this._visualization.load("/content/audio/new_year_dubstep_minimix.ogg");
+    const playPauseButton = shadowRoot.getElementById("play-pause-button");
+    const playPauseSvg = shadowRoot.getElementById("play-pause-svg");
+    const leftToPlay = shadowRoot.getElementById("left-to-play");
+    const rightToPlay = shadowRoot.getElementById("right-to-play");
+    const leftToPause = shadowRoot.getElementById("left-to-pause");
+    const rightToPause = shadowRoot.getElementById("right-to-pause");
 
-    this._audioElement = shadowRoot.querySelector("audio");
-    this._audioSourceNode = null;
-    this._audioContext = null;
-    this._onpaint = null;
+    playPauseButton.addEventListener("click", () => {
+      if (this.paused) {
+        this.play();
+        playPauseSvg.classList.add("playing");
+        leftToPause.beginElement();
+        rightToPause.beginElement();
+      } else {
+        this.pause();
+        playPauseSvg.classList.remove("playing");
+        leftToPlay.beginElement();
+        rightToPlay.beginElement();
+      }
+    });
 
     this._animationCallback = () => {
       this._requestAnimation();
       this._dispatchPaintEvent();
     };
-
-    const audioEventHandler = (event) => this._dispatchAudioEvent(event);
-    //audioEvents.forEach((key) => this._audioElement[key] = audioEventHandler);
   }
 
-  static get observedAttributes() {
-    //console.log("AudioVisualization.observedAttributes (get)");
-
-    return observedAttributes;
-  }
-
-  get audioContext() {
-    //console.log(`${this.id || "(unknown)"}.audioContext (get)`);
-
-    return this._audioContext;
-  }
-
-  set audioContext(value) {
-    //console.log(`${this.id || "(unknown)"}.audioContext (set)`, { value });
-
-    const oldValue = this._audioContext;
-    const newValue = value || null;
-
-    if (oldValue) {
-      this._audioSourceNode.disconnect(oldValue.destination);
-      this._audioSourceNode = null;
+  load(url) {
+    if (!url) {
+      throw new Error("URL required.");
     }
 
-    if (newValue) {
-      this._audioSourceNode = newValue.createMediaElementSource(this._audioElement);
-      this._audioSourceNode.connect(newValue.destination);
+    this.url = url;
+
+    this._audioContext = new AudioContext();
+    // this._audioSourceNode = this._audioContext.createMediaElementSource(new HTMLAudioElement());
+    // this._audioSourceNode.connect(this._audioContext.destination);
+
+    return new Promise((resolve, reject) => {
+      // this.renderingContext.canvas.width = this.element.offsetWidth;
+      // this.renderingContext.canvas.height = this.element.offsetHeight;
+
+      // this.element.handleResize = this.onResize.bind(this);
+
+      // const resizeObserver = new ResizeObserver(entries => {
+      //   for (let entry of entries) {
+      //     if (entry.target.handleResize) {
+      //       entry.target.handleResize();
+      //     }
+      //   }
+      // });
+
+      // resizeObserver.observe(this.element);
+
+      const request = new XMLHttpRequest();
+
+      // this.onLoading("Loading Audio Buffer");
+
+      request.addEventListener("load", () => {
+        const { status, statusText, response } = request;
+
+        if (status < 400) {
+          // this.onLoading("Decoding Audio Data");
+
+          this._analyser = this._audioContext.createAnalyser();
+          // this.analyser.fftSize = Constants.FFT_SIZE;
+          // this.analyser.minDecibels = Constants.MIN_DECIBELS;
+          // this.analyser.maxDecibels = Constants.MAX_DECIBELS;
+          // this.analyser.smoothingTimeConstant = Constants.SMOOTHING_TIME;
+
+          this._audioContext.decodeAudioData(response, (audioBuffer) => {
+            // this.onLoading("Ready");
+
+            this._audioBuffer = audioBuffer;
+            this._gainNode = this._audioContext.createGain();
+            this._gainNode.connect(this._analyser);
+            this._analyser.connect(this._audioContext.destination);
+
+            // this.frequencyData = new Uint8Array(this.analyser.frequencyBinCount);
+            // this.timeData = new Uint8Array(this.analyser.frequencyBinCount);
+
+            // for (var i = 0; i < Constants.TOTAL_STARS; i++) {
+            //   this.stars.push(new Star(this));
+            // }
+
+            // for (var i = 0; i < Constants.TOTAL_POINTS; i++) {
+            //   const angle = (i * 360) / Constants.TOTAL_POINTS;
+            //   const value = Math.random() * Constants.RANDOM_POINT_VALUE;
+            //   this.points.push(new Point(this, angle, value));
+            // }
+
+            // for (var i = 0; i < Constants.TOTAL_AVG_POINTS; i++) {
+            //   const angle = (i * 360) / Constants.TOTAL_AVG_POINTS;
+            //   const value = Math.random() * Constants.RANDOM_POINT_VALUE;
+            //   this.avg_points.push(new Point(this, angle, value));
+            // }
+
+            resolve();
+          }, (error) => {
+            reject(error);
+          });
+        } else {
+          reject(`Request failed: ${statusText}`);
+        }
+      });
+
+      request.addEventListener("error", (event) => {
+        reject(event.error);
+      });
+
+      request.responseType = "arraybuffer";
+      request.open("GET", url, true);
+      request.send();
+    }).then(
+      // this.onLoadCompleted.bind(this),
+      // this.onLoadFailed.bind(this));
+    );
+  }
+
+  onLoading(step) {
+    // const loadingElement = this.element.querySelector(".loading");
+    // loadingElement.innerHTML = `<h1>Loading&hellip;</h1><p>&ndash; ${step} &ndash;</p>`;
+    // loadingElement.classList.remove("hidden");
+  }
+
+  onLoadCompleted() {
+    // const loadingElement = this.element.querySelector(".loading");
+    // loadingElement.classList.add("hidden");
+
+    this.play();
+  }
+
+  onLoadFailed(error) {
+    console.error(error);
+
+    // const loadingElement = this.element.querySelector(".loading");
+    // loadingElement.classList.add("hidden");
+
+    // const errorElement = this.element.querySelector(".error");
+
+    // if (error.message === "Web Audio API unsupported.") {
+    //   errorElement.innerHTML = "<h1>Audio Unsupported</h1><p>Sorry! This visualization requires the <a href=\"http://caniuse.com/#feat=audio-api\" target=\"_blank\">Web Audio API</a>.</p>";
+    // } else {
+    //   errorElement.innerHTML = "<h1>Error Occurred</h1><p>Oops! An unexpected error occurred. Please <a>try again</a>.</p>";
+    //   errorElement.querySelector("a").addEventListener("click", this.onReloadClick);
+    // }
+
+    // errorElement.classList.remove("hidden");
+  }
+
+  play() {
+    this.paused = false;
+
+    if (!this._audioContext) {
+      this.load("/content/audio/new_year_dubstep_minimix.ogg");
+    } else {
+      this._audioBufferSource = this._audioContext.createBufferSource();
+      this._audioBufferSource.buffer = this._audioBuffer;
+      this._audioBufferSource.loop = true;
+      this._audioBufferSource.connect(this._gainNode);
+
+      this._startedAt = this._pausedAt ? Date.now() - this._pausedAt : Date.now();
+      this._pausedAt ? this._audioBufferSource.start(0, this._pausedAt / 1000) : this._audioBufferSource.start();
     }
 
-    this._audioContext = newValue;
+    // document.querySelector("a.play").classList.add("hidden");
+    // document.querySelector("a.pause").classList.remove("hidden");
+
+    // this.animate();
   }
+
+  pause() {
+    this.paused = true;
+
+    if (this._audioBufferSource) {
+      this._audioBufferSource.stop();
+      this._audioBufferSource = undefined;
+    }
+
+    this._pausedAt = Date.now() - this._startedAt;
+
+    // document.querySelector("a.pause").classList.add("hidden");
+    // document.querySelector("a.play").classList.remove("hidden");
+  }
+
+  // set audioContext(value) {
+  //   //console.log(`${this.id || "(unknown)"}.audioContext (set)`, { value });
+
+  //   const oldValue = this._audioContext;
+  //   const newValue = value || null;
+
+  //   if (oldValue) {
+  //     this._audioSourceNode.disconnect(oldValue.destination);
+  //     this._audioSourceNode = null;
+  //   }
+
+  //   if (newValue) {
+  //     this._audioSourceNode = newValue.createMediaElementSource(this._audioElement);
+  //     this._audioSourceNode.connect(newValue.destination);
+  //   }
+
+  //   this._audioContext = newValue;
+  // }
 
   get onpaint() {
     //console.log(`${this.id || "(unknown)"}.onpaint (get)`);
@@ -260,60 +403,11 @@ class AudioVisualization extends HTMLElement {
     cancelAnimationFrame(this._animationRequestId);
   }
 
-  _dispatchAudioEvent(event) {
-    //console.log(`${this.id || "(unknown)"}._dispatchAudioEvent`, { event });
-
-    this.dispatchEvent(new event.constructor(event.type, event));
-  }
-
   _dispatchPaintEvent() {
     //console.log(`${this.id || "(unknown)"}._dispatchPaintEvent`);
 
     this.dispatchEvent(new Event("paint"));
   }
 }
-
-audioProperties.filter((key) => audioDescriptors[key].hasOwnProperty("attribute")).forEach((key) => Object.defineProperty(AudioVisualization.prototype, key, {
-  get: (audioDescriptors[key].empty) ? new Function(`return this.hasAttribute("${audioDescriptors[key].attribute}");`) : new Function(`return this.getAttribute("${audioDescriptors[key].attribute}");`),
-  set: (audioDescriptors[key].empty) ? new Function("value", `if (value) this.setAttribute("${audioDescriptors[key].attribute}", ""); else this.removeAttribute("${audioDescriptors[key].attribute}");`) : new Function("value", `this.setAttribute("${audioDescriptors[key].attribute}", value);`),
-  enumerable: false,
-  configurable: true
-}));
-
-audioProperties.filter((key) => !audioDescriptors[key].hasOwnProperty("attribute")).forEach((key) => Object.defineProperty(AudioVisualization.prototype, key, {
-  get: (typeof audioDescriptors[key].get === "function") ? new Function(`return this._audioElement.${key};`) : undefined,
-  set: (typeof audioDescriptors[key].set === "function") ? new Function("value", `this._audioElement.${key} = value;`) : undefined,
-  enumerable: false,
-  configurable: true
-}));
-
-audioMethods.forEach((key) => Object.defineProperty(AudioVisualization.prototype, key, {
-  value: new Function("...args", `return this._audioElement.${key}(...args);`),
-  writable: true,
-  enumerable: false,
-  configurable: true
-}));
-
-audioConstants.forEach((key) => Object.defineProperty(AudioVisualization.prototype, key, {
-  value: audioDescriptors[key].value,
-  writable: false,
-  enumerable: false,
-  configurable: false
-}));
-
-// const audioVisualizationDescriptors = getPropertyDescriptors(AudioVisualization);
-// const audioVisualizationDescriptorsAdded = diff(audioVisualizationDescriptors, audioDescriptors);
-// const audioVisualizationDescriptorsMissing = diff(audioDescriptors, audioVisualizationDescriptors);
-
-// console.log("baseDescriptors", baseDescriptors);
-// console.log("audioDescriptors", audioDescriptors);
-// console.log("audioVisualizationDescriptors", audioVisualizationDescriptors);
-// console.log("audioVisualizationDescriptorsAdded", audioVisualizationDescriptorsAdded);
-// console.log("audioVisualizationDescriptorsMissing", audioVisualizationDescriptorsMissing);
-// console.log("audioEvents", audioEvents);
-// console.log("audioProperties", audioProperties);
-// console.log("audioMethods", audioMethods);
-// console.log("audioConstants", audioConstants);
-// console.log("observedAttributes", observedAttributes);
 
 export default AudioVisualization;

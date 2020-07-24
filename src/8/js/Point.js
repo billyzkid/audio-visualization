@@ -10,8 +10,8 @@ class Point {
   }
 
   update() {
-    const width = this.visualization.element.offsetWidth;
-    const height = this.visualization.element.offsetHeight;
+    const width = this.visualization.offsetWidth;
+    const height = this.visualization.offsetHeight;
 
     this.radius = Math.abs(width, height) / 10;
     this.x = (width / 2) + this.radius * Math.sin(Constants.PI_HALF * this.angle);

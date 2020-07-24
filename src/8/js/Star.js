@@ -1,11 +1,7 @@
 import * as Constants from "./Constants.js";
 
 class Star {
-  constructor(visualization) {
-    const width = visualization.element.offsetWidth;
-    const height = visualization.element.offsetHeight;
-    const avg = visualization.avg;
-
+  constructor(width, height, avg) {
     this.x = Math.random() * width - (width / 2);
     this.y = Math.random() * height - (height / 2);
     this.z = this.max_depth = Math.max(width / height);

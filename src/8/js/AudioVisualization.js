@@ -1,4 +1,4 @@
-import Visualization from "./Visualization.js";
+import * as Constants from "./Constants.js";
 
 const template = document.createElement("template");
 template.innerHTML = `
@@ -13,7 +13,7 @@ template.innerHTML = `
       display: none
     }
 
-    div.visualization {
+    #viz-container {
       flex: auto;
       position: relative;
       font-size: 14px;
@@ -22,7 +22,7 @@ template.innerHTML = `
       height: 100%;
     }
 
-    canvas {
+    #canvas {
       display: block;
       width: 100%;
       height: 100%;
@@ -34,45 +34,46 @@ template.innerHTML = `
       left: 50%;
       transform: translate(-50%, -50%);
       transition: all 400ms;
+      margin-top: -75px;
     }
 
     #loading-container>h1 {
-      margin: 0;
+      color: #fff;
       font-size: 1em;
       font-weight: normal;
       text-align: center;
-      color: #fff;
+      margin: 0;
     }
 
     #loading-container>p {
-      margin: 0.2em 0;
+      color: #aaa;
       font-size: 0.8em;
       text-align: center;
       text-transform: uppercase;
-      color: #aaa;
+      margin: 0.2em 0;
     }
 
     #error-container {
       position: absolute;
       top: 50%;
       left: 50%;
-      transform: translate(-50%, -50%);
       padding: 0.6em 1.2em;
       border: 0.2em solid #ff667f;
       border-radius: 0.4em;
       background-color: #ff3354;
+      transform: translate(-50%, -50%);
     }
     
     #error-container>h1 {
-      margin: 0;
-      font-size: 1.2em;
       color: #ffe5ea;
+      font-size: 1.2em;
+      margin: 0;
     }
 
     #error-container>p {
-      margin: 0.4em 0;
-      font-size: 1em;
       color: #ffccd4;
+      font-size: 1em;
+      margin: 0.4em 0;
     }
 
     #error-container>p>a {
@@ -86,9 +87,10 @@ template.innerHTML = `
       visibility: hidden;
     }
 
-    #play-pause-button { 
+    #play-pause-button {
       position: absolute;
       top: 0;
+      left: 0;
       width: 100%;
       height: 100%;
       font-size: 0;
@@ -109,8 +111,8 @@ template.innerHTML = `
       opacity: 0;
     }
   </style>
-  <div class="visualization">
-    <canvas></canvas>
+  <div id="viz-container">
+    <canvas id="canvas"></canvas>
     <button id="play-pause-button">
       <svg id="play-pause-svg" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 50 50">
         <polygon id="left-bar" points="12,0 25,11.5 25,39 12,50" />
@@ -130,11 +132,10 @@ class AudioVisualization extends HTMLElement {
   constructor() {
     super();
 
-    this.playing = false;
-
     const shadowRoot = this.attachShadow({ mode: "closed" });
     shadowRoot.appendChild(template.content.cloneNode(true));
 
+    const canvas = shadowRoot.getElementById("canvas");
     const playPauseButton = shadowRoot.getElementById("play-pause-button");
     const playPauseSvg = shadowRoot.getElementById("play-pause-svg");
     const leftToPlay = shadowRoot.getElementById("left-to-play");
@@ -143,7 +144,7 @@ class AudioVisualization extends HTMLElement {
     const rightToPause = shadowRoot.getElementById("right-to-pause");
 
     playPauseButton.addEventListener("click", () => {
-      if (this.playing) {
+      if (this._playing) {
         this.pause();
         playPauseSvg.classList.remove("playing");
         leftToPlay.beginElement();
@@ -156,42 +157,50 @@ class AudioVisualization extends HTMLElement {
       }
     });
 
+    this._playPauseButton = playPauseButton;
+    this._loadingContainer = shadowRoot.getElementById("loading-container");
+    this._errorContainer = shadowRoot.getElementById("error-container");
+    this._canvasContext = canvas.getContext("2d");
+
     this._animationCallback = () => {
       this._requestAnimation();
       this._dispatchPaintEvent();
     };
   }
 
-  play() {
-    this.playing = true;
-
-    if (!this._audioBufferSource) {
-      this._load(this.getAttribute("src"));
-    }
-
-    this._playTime = this._pauseTime ? Date.now() - this._pauseTime : Date.now();
+  get audioContext() {
+    return this._audioContext || null;
   }
 
-  pause() {
-    this.playing = false;
+  get canvasContext() {
+    return this._canvasContext || null;
+  }
 
-    if (this._audioBufferSource) {
-      this._audioBufferSource.stop();
-      this._audioBufferSource = undefined;
-    }
+  get playing() {
+    return this._playing || false;
+  }
 
-    this._pauseTime = Date.now() - this._playTime;
+  get analyser() {
+    return this._analyser || null;
+  }
+
+  get gainNode() {
+    return this._gainNode || null;
+  }
+
+  get frequencyData() {
+    return this._frequencyData || new Uint8Array();
+  }
+
+  get timeData() {
+    return this._timeData || new Uint8Array();
   }
 
   get onpaint() {
-    //console.log(`${this.id || "(unknown)"}.onpaint (get)`);
-
     return this._onpaint;
   }
 
   set onpaint(value) {
-    //console.log(`${this.id || "(unknown)"}.onpaint (set)`, { value });
-
     const oldValue = this._onpaint;
     const newValue = (typeof value === "function") ? value : null;
 
@@ -206,25 +215,34 @@ class AudioVisualization extends HTMLElement {
     this._onpaint = newValue;
   }
 
-  connectedCallback() {
-    //console.log(`${this.id || "(unknown)"}.connectedCallback`);
+  play() {
+    if (!this._audioBufferSource) {
+      this._load(this.getAttribute("src"));
+    }
+  }
 
+  pause() {
+    if (this._audioBufferSource) {
+      this._audioBufferSource.stop();
+      this._audioBufferSource = undefined;
+    }
+
+    this._pauseTime = Date.now() - this._playTime;
+    this._playing = false;
+  }
+
+  connectedCallback() {
     this._requestAnimation();
   }
 
   disconnectedCallback() {
-    //console.log(`${this.id || "(unknown)"}.disconnectedCallback`);
-
     this._cancelAnimation();
   }
 
   adoptedCallback() {
-    //console.log(`${this.id || "(unknown)"}.adoptedCallback`);
   }
 
   attributeChangedCallback(name, oldValue, newValue) {
-    //console.log(`${this.id || "(unknown)"}.attributeChangedCallback`, { name, oldValue, newValue });
-
     if (name === "onpaint") {
       this.onpaint = (newValue !== null) ? new Function("event", newValue) : null;
     } else if (newValue !== null) {
@@ -235,20 +253,14 @@ class AudioVisualization extends HTMLElement {
   }
 
   _requestAnimation() {
-    //console.log(`${this.id || "(unknown)"}._requestAnimation`);
-
     this._animationRequestId = requestAnimationFrame(this._animationCallback);
   }
 
   _cancelAnimation() {
-    //console.log(`${this.id || "(unknown)"}._cancelAnimation`);
-
     cancelAnimationFrame(this._animationRequestId);
   }
 
   _dispatchPaintEvent() {
-    //console.log(`${this.id || "(unknown)"}._dispatchPaintEvent`);
-
     this.dispatchEvent(new Event("paint"));
   }
 
@@ -272,6 +284,10 @@ class AudioVisualization extends HTMLElement {
           this._audioContext = new AudioContext();
 
           this._analyser = this._audioContext.createAnalyser();
+          this._analyser.fftSize = Constants.FFT_SIZE;
+          this._analyser.minDecibels = Constants.MIN_DECIBELS;
+          this._analyser.maxDecibels = Constants.MAX_DECIBELS;
+          this._analyser.smoothingTimeConstant = Constants.SMOOTHING_TIME;
           this._analyser.connect(this._audioContext.destination);
 
           this._gainNode = this._audioContext.createGain();
@@ -285,11 +301,17 @@ class AudioVisualization extends HTMLElement {
             this._audioBufferSource.loop = true;
             this._audioBufferSource.connect(this._gainNode);
 
+            this._frequencyData = new Uint8Array(this._analyser.frequencyBinCount);
+            this._timeData = new Uint8Array(this._analyser.frequencyBinCount);
+
             if (this._pauseTime) {
               this._audioBufferSource.start(0, this._pauseTime / 1000);
             } else {
               this._audioBufferSource.start();
             }
+
+            this._playTime = this._pauseTime ? Date.now() - this._pauseTime : Date.now();
+            this._playing = true;
 
             resolve();
           }, (error) => {
@@ -307,19 +329,31 @@ class AudioVisualization extends HTMLElement {
       request.responseType = "arraybuffer";
       request.open("GET", source, true);
       request.send();
-    }).then(this._onLoaded, this._onLoadFailed);
+    }).then(this._onLoaded.bind(this), this._onLoadFailed.bind(this));
   }
 
   _onLoading(message) {
     console.log("Loading...", message);
+
+    this._loadingContainer.innerHTML = `<h1>Loading&hellip;</h1><p>&ndash; ${message} &ndash;</p>`;
+    this._loadingContainer.classList.remove("hidden");
   }
 
   _onLoaded() {
     console.log("Loaded!");
+
+    this._loadingContainer.classList.add("hidden");
+    this._errorContainer.classList.add("hidden");
   }
 
   _onLoadFailed(error) {
-    console.error("Load failed!", error);
+    console.error(error);
+
+    this._playPauseButton.style.display = "none";
+    this._loadingContainer.classList.add("hidden");
+
+    this._errorContainer.innerHTML = `<h1>Error Occurred</h1><p>${error}</p>`;
+    this._errorContainer.classList.remove("hidden");
   }
 }
 

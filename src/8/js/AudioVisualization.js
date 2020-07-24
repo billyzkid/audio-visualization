@@ -131,7 +131,7 @@ class AudioVisualization extends HTMLElement {
   constructor() {
     super();
 
-    this.paused = true;
+    this.playing = false;
 
     const shadowRoot = this.attachShadow({ mode: "closed" });
     shadowRoot.appendChild(template.content.cloneNode(true));
@@ -144,16 +144,16 @@ class AudioVisualization extends HTMLElement {
     const rightToPause = shadowRoot.getElementById("right-to-pause");
 
     playPauseButton.addEventListener("click", () => {
-      if (this.paused) {
-        this.play();
-        playPauseSvg.classList.add("playing");
-        leftToPause.beginElement();
-        rightToPause.beginElement();
-      } else {
+      if (this.playing) {
         this.pause();
         playPauseSvg.classList.remove("playing");
         leftToPlay.beginElement();
         rightToPlay.beginElement();
+      } else {
+        this.play();
+        playPauseSvg.classList.add("playing");
+        leftToPause.beginElement();
+        rightToPause.beginElement();
       }
     });
 
@@ -163,40 +163,149 @@ class AudioVisualization extends HTMLElement {
     };
   }
 
-  
-
   play() {
-    this.paused = false;
+    this.playing = true;
 
-    this._load("/content/audio/new_year_dubstep_minimix.ogg");
+    const source = this.getAttribute("src");
+    this._load(source);
   }
 
   pause() {
-    this.paused = true;
+    this.playing = false;
+  }
 
-    if (this._audioBufferSource) {
-      this._audioBufferSource.stop();
-      this._audioBufferSource = undefined;
+  stop() {
+    this.playing = false;
+
+    // TODO
+  }
+
+  get onpaint() {
+    //console.log(`${this.id || "(unknown)"}.onpaint (get)`);
+
+    return this._onpaint;
+  }
+
+  set onpaint(value) {
+    //console.log(`${this.id || "(unknown)"}.onpaint (set)`, { value });
+
+    const oldValue = this._onpaint;
+    const newValue = (typeof value === "function") ? value : null;
+
+    if (oldValue) {
+      this.removeEventListener("paint", oldValue);
+    }
+
+    if (newValue) {
+      this.addEventListener("paint", newValue);
+    }
+
+    this._onpaint = newValue;
+  }
+
+  connectedCallback() {
+    //console.log(`${this.id || "(unknown)"}.connectedCallback`);
+
+    this._requestAnimation();
+  }
+
+  disconnectedCallback() {
+    //console.log(`${this.id || "(unknown)"}.disconnectedCallback`);
+
+    this._cancelAnimation();
+  }
+
+  adoptedCallback() {
+    //console.log(`${this.id || "(unknown)"}.adoptedCallback`);
+  }
+
+  attributeChangedCallback(name, oldValue, newValue) {
+    //console.log(`${this.id || "(unknown)"}.attributeChangedCallback`, { name, oldValue, newValue });
+
+    if (name === "onpaint") {
+      this.onpaint = (newValue !== null) ? new Function("event", newValue) : null;
+    } else if (newValue !== null) {
+      this._audioElement.setAttribute(name, newValue);
+    } else {
+      this._audioElement.removeAttribute(name);
     }
   }
 
-  // set audioContext(value) {
-  //   //console.log(`${this.id || "(unknown)"}.audioContext (set)`, { value });
+  _requestAnimation() {
+    //console.log(`${this.id || "(unknown)"}._requestAnimation`);
 
-  //   const oldValue = this._audioContext;
-  //   const newValue = value || null;
+    this._animationRequestId = requestAnimationFrame(this._animationCallback);
+  }
 
-  //   if (oldValue) {
-  //     this._audioSourceNode.disconnect(oldValue.destination);
-  //     this._audioSourceNode = null;
+  _cancelAnimation() {
+    //console.log(`${this.id || "(unknown)"}._cancelAnimation`);
+
+    cancelAnimationFrame(this._animationRequestId);
+  }
+
+  _dispatchPaintEvent() {
+    //console.log(`${this.id || "(unknown)"}._dispatchPaintEvent`);
+
+    this.dispatchEvent(new Event("paint"));
+  }
+
+  // _load(source) {
+  //   if (!source) {
+  //     throw new Error("Source required.");
   //   }
 
-  //   if (newValue) {
-  //     this._audioSourceNode = newValue.createMediaElementSource(this._audioElement);
-  //     this._audioSourceNode.connect(newValue.destination);
-  //   }
+  //   this._onLoading("Loading Audio Source");
 
-  //   this._audioContext = newValue;
+  //   const audioContext = new AudioContext();
+
+  //   return new Promise((resolve, reject) => {
+
+  //     const request = new XMLHttpRequest();
+
+  //     request.addEventListener("load", () => {
+  //       const { status, statusText, response } = request;
+
+  //       if (status < 400) {
+  //         this._onLoading("Decoding Audio Data");
+
+  //         this._audioContext = audioContext;
+
+  //         this._analyser = this._audioContext.createAnalyser();
+  //         // this.analyser.fftSize = Constants.FFT_SIZE;
+  //         // this.analyser.minDecibels = Constants.MIN_DECIBELS;
+  //         // this.analyser.maxDecibels = Constants.MAX_DECIBELS;
+  //         // this.analyser.smoothingTimeConstant = Constants.SMOOTHING_TIME;
+
+  //         this._audioContext.decodeAudioData(response, (audioBuffer) => {
+  //           this._onLoading("Ready");
+
+  //           this._audioBuffer = audioBuffer;
+  //           this._gainNode = this._audioContext.createGain();
+  //           this._gainNode.connect(this._analyser);
+  //           this._analyser.connect(this._audioContext.destination);
+
+  //           this._audioBufferSource = this._audioContext.createBufferSource();
+  //           this._audioBufferSource.buffer = this._audioBuffer;
+  //           this._audioBufferSource.loop = true;
+  //           this._audioBufferSource.connect(this._gainNode);
+      
+  //           resolve();
+  //         }, (error) => {
+  //           reject(error);
+  //         });
+  //       } else {
+  //         reject(`Request failed: ${statusText}`);
+  //       }
+  //     });
+
+  //     request.addEventListener("error", (event) => {
+  //       reject(event.error);
+  //     });
+
+  //     request.responseType = "arraybuffer";
+  //     request.open("GET", source, true);
+  //     request.send();
+  //   }).then(this._onLoadCompleted.bind(this), this._onLoadFailed.bind(this));
   // }
 
   _load(url) {
@@ -279,107 +388,18 @@ class AudioVisualization extends HTMLElement {
       request.responseType = "arraybuffer";
       request.open("GET", url, true);
       request.send();
-    }).then(this.onLoadCompleted.bind(this), this.onLoadFailed.bind(this));
+    }).then(this._onLoadCompleted, this._onLoadFailed);
   }
 
-  _onLoading(step) {
-    // const loadingElement = this.element.querySelector(".loading");
-    // loadingElement.innerHTML = `<h1>Loading&hellip;</h1><p>&ndash; ${step} &ndash;</p>`;
-    // loadingElement.classList.remove("hidden");
+  _onLoading(message) {
   }
 
   _onLoadCompleted() {
-    // const loadingElement = this.element.querySelector(".loading");
-    // loadingElement.classList.add("hidden");
-
-    // this.play();
+    console.log("Load completed");
   }
 
   _onLoadFailed(error) {
-    console.error(error);
-
-    // const loadingElement = this.element.querySelector(".loading");
-    // loadingElement.classList.add("hidden");
-
-    // const errorElement = this.element.querySelector(".error");
-
-    // if (error.message === "Web Audio API unsupported.") {
-    //   errorElement.innerHTML = "<h1>Audio Unsupported</h1><p>Sorry! This visualization requires the <a href=\"http://caniuse.com/#feat=audio-api\" target=\"_blank\">Web Audio API</a>.</p>";
-    // } else {
-    //   errorElement.innerHTML = "<h1>Error Occurred</h1><p>Oops! An unexpected error occurred. Please <a>try again</a>.</p>";
-    //   errorElement.querySelector("a").addEventListener("click", this.onReloadClick);
-    // }
-
-    // errorElement.classList.remove("hidden");
-  }
-
-  get onpaint() {
-    //console.log(`${this.id || "(unknown)"}.onpaint (get)`);
-
-    return this._onpaint;
-  }
-
-  set onpaint(value) {
-    //console.log(`${this.id || "(unknown)"}.onpaint (set)`, { value });
-
-    const oldValue = this._onpaint;
-    const newValue = (typeof value === "function") ? value : null;
-
-    if (oldValue) {
-      this.removeEventListener("paint", oldValue);
-    }
-
-    if (newValue) {
-      this.addEventListener("paint", newValue);
-    }
-
-    this._onpaint = newValue;
-  }
-
-  connectedCallback() {
-    //console.log(`${this.id || "(unknown)"}.connectedCallback`);
-
-    this._requestAnimation();
-  }
-
-  disconnectedCallback() {
-    //console.log(`${this.id || "(unknown)"}.disconnectedCallback`);
-
-    this._cancelAnimation();
-  }
-
-  adoptedCallback() {
-    //console.log(`${this.id || "(unknown)"}.adoptedCallback`);
-  }
-
-  attributeChangedCallback(name, oldValue, newValue) {
-    //console.log(`${this.id || "(unknown)"}.attributeChangedCallback`, { name, oldValue, newValue });
-
-    if (name === "onpaint") {
-      this.onpaint = (newValue !== null) ? new Function("event", newValue) : null;
-    } else if (newValue !== null) {
-      this._audioElement.setAttribute(name, newValue);
-    } else {
-      this._audioElement.removeAttribute(name);
-    }
-  }
-
-  _requestAnimation() {
-    //console.log(`${this.id || "(unknown)"}._requestAnimation`);
-
-    this._animationRequestId = requestAnimationFrame(this._animationCallback);
-  }
-
-  _cancelAnimation() {
-    //console.log(`${this.id || "(unknown)"}._cancelAnimation`);
-
-    cancelAnimationFrame(this._animationRequestId);
-  }
-
-  _dispatchPaintEvent() {
-    //console.log(`${this.id || "(unknown)"}._dispatchPaintEvent`);
-
-    this.dispatchEvent(new Event("paint"));
+    console.error("Load failed", error);
   }
 }
 

@@ -1,23 +1,14 @@
 import * as Constants from "./Constants.js";
 
 class Point {
-  constructor(visualization, angle, value) {
-    this.visualization = visualization;
-    this.angle = angle;
-    this.value = value;
-
-    this.update();
-  }
-
-  update() {
-    const width = this.visualization.offsetWidth;
-    const height = this.visualization.offsetHeight;
+  constructor(width, height, angle) {
+    const randomValue = Math.random() * Constants.RANDOM_POINT_VALUE;
 
     this.radius = Math.abs(width, height) / 10;
-    this.x = (width / 2) + this.radius * Math.sin(Constants.PI_HALF * this.angle);
-    this.y = (height / 2) + this.radius * Math.cos(Constants.PI_HALF * this.angle);
-    this.dx = this.x + this.value * Math.sin(Constants.PI_HALF * this.angle);
-    this.dy = this.y + this.value * Math.cos(Constants.PI_HALF * this.angle);
+    this.x = (width / 2) + this.radius * Math.sin(Constants.PI_HALF * angle);
+    this.y = (height / 2) + this.radius * Math.cos(Constants.PI_HALF * angle);
+    this.dx = this.x + randomValue * Math.sin(Constants.PI_HALF * angle);
+    this.dy = this.y + randomValue * Math.cos(Constants.PI_HALF * angle);
   }
 }
 

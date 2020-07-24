@@ -249,73 +249,12 @@ class AudioVisualization extends HTMLElement {
     this.dispatchEvent(new Event("paint"));
   }
 
-  // _load(source) {
-  //   if (!source) {
-  //     throw new Error("Source required.");
-  //   }
-
-  //   this._onLoading("Loading Audio Source");
-
-  //   const audioContext = new AudioContext();
-
-  //   return new Promise((resolve, reject) => {
-
-  //     const request = new XMLHttpRequest();
-
-  //     request.addEventListener("load", () => {
-  //       const { status, statusText, response } = request;
-
-  //       if (status < 400) {
-  //         this._onLoading("Decoding Audio Data");
-
-  //         this._audioContext = audioContext;
-
-  //         this._analyser = this._audioContext.createAnalyser();
-  //         // this.analyser.fftSize = Constants.FFT_SIZE;
-  //         // this.analyser.minDecibels = Constants.MIN_DECIBELS;
-  //         // this.analyser.maxDecibels = Constants.MAX_DECIBELS;
-  //         // this.analyser.smoothingTimeConstant = Constants.SMOOTHING_TIME;
-
-  //         this._audioContext.decodeAudioData(response, (audioBuffer) => {
-  //           this._onLoading("Ready");
-
-  //           this._audioBuffer = audioBuffer;
-  //           this._gainNode = this._audioContext.createGain();
-  //           this._gainNode.connect(this._analyser);
-  //           this._analyser.connect(this._audioContext.destination);
-
-  //           this._audioBufferSource = this._audioContext.createBufferSource();
-  //           this._audioBufferSource.buffer = this._audioBuffer;
-  //           this._audioBufferSource.loop = true;
-  //           this._audioBufferSource.connect(this._gainNode);
-      
-  //           resolve();
-  //         }, (error) => {
-  //           reject(error);
-  //         });
-  //       } else {
-  //         reject(`Request failed: ${statusText}`);
-  //       }
-  //     });
-
-  //     request.addEventListener("error", (event) => {
-  //       reject(event.error);
-  //     });
-
-  //     request.responseType = "arraybuffer";
-  //     request.open("GET", source, true);
-  //     request.send();
-  //   }).then(this._onLoadCompleted.bind(this), this._onLoadFailed.bind(this));
-  // }
-
   _load(source) {
     if (!source) {
       throw new Error("Source URL required.");
     }
 
     this._onLoading("Loading Audio Source");
-
-    this._audioContext = new AudioContext();
 
     return new Promise((resolve, reject) => {
 
@@ -327,25 +266,23 @@ class AudioVisualization extends HTMLElement {
         if (status < 400) {
           this._onLoading("Decoding Audio Data");
 
+          this._audioContext = new AudioContext();
+
           this._analyser = this._audioContext.createAnalyser();
-          // this.analyser.fftSize = Constants.FFT_SIZE;
-          // this.analyser.minDecibels = Constants.MIN_DECIBELS;
-          // this.analyser.maxDecibels = Constants.MAX_DECIBELS;
-          // this.analyser.smoothingTimeConstant = Constants.SMOOTHING_TIME;
+          this._analyser.connect(this._audioContext.destination);
+
+          this._gainNode = this._audioContext.createGain();
+          this._gainNode.connect(this._analyser);
 
           this._audioContext.decodeAudioData(response, (audioBuffer) => {
             this._onLoading("Ready");
 
-            this._audioBuffer = audioBuffer;
-            this._gainNode = this._audioContext.createGain();
-            this._gainNode.connect(this._analyser);
-            this._analyser.connect(this._audioContext.destination);
-
             this._audioBufferSource = this._audioContext.createBufferSource();
-            this._audioBufferSource.buffer = this._audioBuffer;
+            this._audioBufferSource.buffer = audioBuffer;
             this._audioBufferSource.loop = true;
             this._audioBufferSource.connect(this._gainNode);
-      
+            this._audioBufferSource.start();
+
             resolve();
           }, (error) => {
             reject(error);

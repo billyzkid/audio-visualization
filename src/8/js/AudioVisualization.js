@@ -98,10 +98,8 @@ template.innerHTML = `
     }
     
     #play-pause-svg { 
-      width: 100px;
-      margin: 0 auto;
       fill: #fff;
-      padding: 3rem;
+      width: 100px;
       transition: 0.6s opacity;
       transition-delay: 0.4s;
     }
@@ -166,18 +164,19 @@ class AudioVisualization extends HTMLElement {
   play() {
     this.playing = true;
 
-    const source = this.getAttribute("src");
-    this._load(source);
+    this._load(this.getAttribute("src"));
+
+    this._playTime = this._pauseTime ? Date.now() - this._pauseTime : Date.now();
   }
 
   pause() {
     this.playing = false;
-  }
 
-  stop() {
-    this.playing = false;
+    if (this._audioBufferSource) {
+      this._audioBufferSource.stop();
+    }
 
-    // TODO
+    this._pauseTime = Date.now() - this._playTime;
   }
 
   get onpaint() {
@@ -281,7 +280,12 @@ class AudioVisualization extends HTMLElement {
             this._audioBufferSource.buffer = audioBuffer;
             this._audioBufferSource.loop = true;
             this._audioBufferSource.connect(this._gainNode);
-            this._audioBufferSource.start();
+
+            if (this._pauseTime) {
+              this._audioBufferSource.start(0, this._pauseTime / 1000);
+            } else {
+              this._audioBufferSource.start();
+            }
 
             resolve();
           }, (error) => {

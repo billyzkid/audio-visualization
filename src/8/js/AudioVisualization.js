@@ -308,28 +308,24 @@ class AudioVisualization extends HTMLElement {
   //   }).then(this._onLoadCompleted.bind(this), this._onLoadFailed.bind(this));
   // }
 
-  _load(url) {
-    if (!url) {
-      throw new Error("URL required.");
+  _load(source) {
+    if (!source) {
+      throw new Error("Source URL required.");
     }
 
-    this.url = url;
+    this._onLoading("Loading Audio Source");
 
     this._audioContext = new AudioContext();
-    // this._audioSourceNode = this._audioContext.createMediaElementSource(new HTMLAudioElement());
-    // this._audioSourceNode.connect(this._audioContext.destination);
 
     return new Promise((resolve, reject) => {
 
       const request = new XMLHttpRequest();
 
-      // this.onLoading("Loading Audio Buffer");
-
       request.addEventListener("load", () => {
         const { status, statusText, response } = request;
 
         if (status < 400) {
-          // this.onLoading("Decoding Audio Data");
+          this._onLoading("Decoding Audio Data");
 
           this._analyser = this._audioContext.createAnalyser();
           // this.analyser.fftSize = Constants.FFT_SIZE;
@@ -338,7 +334,7 @@ class AudioVisualization extends HTMLElement {
           // this.analyser.smoothingTimeConstant = Constants.SMOOTHING_TIME;
 
           this._audioContext.decodeAudioData(response, (audioBuffer) => {
-            // this.onLoading("Ready");
+            this._onLoading("Ready");
 
             this._audioBuffer = audioBuffer;
             this._gainNode = this._audioContext.createGain();
@@ -350,28 +346,6 @@ class AudioVisualization extends HTMLElement {
             this._audioBufferSource.loop = true;
             this._audioBufferSource.connect(this._gainNode);
       
-            this._startedAt = this._pausedAt ? Date.now() - this._pausedAt : Date.now();
-            this._pausedAt ? this._audioBufferSource.start(0, this._pausedAt / 1000) : this._audioBufferSource.start();
-
-            // this.frequencyData = new Uint8Array(this.analyser.frequencyBinCount);
-            // this.timeData = new Uint8Array(this.analyser.frequencyBinCount);
-
-            // for (var i = 0; i < Constants.TOTAL_STARS; i++) {
-            //   this.stars.push(new Star(this));
-            // }
-
-            // for (var i = 0; i < Constants.TOTAL_POINTS; i++) {
-            //   const angle = (i * 360) / Constants.TOTAL_POINTS;
-            //   const value = Math.random() * Constants.RANDOM_POINT_VALUE;
-            //   this.points.push(new Point(this, angle, value));
-            // }
-
-            // for (var i = 0; i < Constants.TOTAL_AVG_POINTS; i++) {
-            //   const angle = (i * 360) / Constants.TOTAL_AVG_POINTS;
-            //   const value = Math.random() * Constants.RANDOM_POINT_VALUE;
-            //   this.avg_points.push(new Point(this, angle, value));
-            // }
-
             resolve();
           }, (error) => {
             reject(error);
@@ -386,20 +360,21 @@ class AudioVisualization extends HTMLElement {
       });
 
       request.responseType = "arraybuffer";
-      request.open("GET", url, true);
+      request.open("GET", source, true);
       request.send();
-    }).then(this._onLoadCompleted, this._onLoadFailed);
+    }).then(this._onLoaded, this._onLoadFailed);
   }
 
   _onLoading(message) {
+    console.log("Loading...", message);
   }
 
-  _onLoadCompleted() {
-    console.log("Load completed");
+  _onLoaded() {
+    console.log("Loaded!");
   }
 
   _onLoadFailed(error) {
-    console.error("Load failed", error);
+    console.error("Load failed!", error);
   }
 }
 

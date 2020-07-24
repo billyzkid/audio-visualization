@@ -91,17 +91,18 @@ template.innerHTML = `
       top: 0;
       width: 100%;
       height: 100%;
+      font-size: 0;
       background: none;
       outline: none;
       border: none;
       cursor: pointer;
+      overflow: hidden;
     }
     
     #play-pause-svg { 
       fill: #fff;
       width: 100px;
-      transition: 0.6s opacity;
-      transition-delay: 0.4s;
+      transition: opacity 0.6s ease 0.4s;
     }
     
     #play-pause-svg.playing {
@@ -164,7 +165,9 @@ class AudioVisualization extends HTMLElement {
   play() {
     this.playing = true;
 
-    this._load(this.getAttribute("src"));
+    if (!this._audioBufferSource) {
+      this._load(this.getAttribute("src"));
+    }
 
     this._playTime = this._pauseTime ? Date.now() - this._pauseTime : Date.now();
   }
@@ -174,6 +177,7 @@ class AudioVisualization extends HTMLElement {
 
     if (this._audioBufferSource) {
       this._audioBufferSource.stop();
+      this._audioBufferSource = undefined;
     }
 
     this._pauseTime = Date.now() - this._playTime;

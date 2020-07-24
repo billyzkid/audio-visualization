@@ -163,7 +163,43 @@ class AudioVisualization extends HTMLElement {
     };
   }
 
-  load(url) {
+  
+
+  play() {
+    this.paused = false;
+
+    this._load("/content/audio/new_year_dubstep_minimix.ogg");
+  }
+
+  pause() {
+    this.paused = true;
+
+    if (this._audioBufferSource) {
+      this._audioBufferSource.stop();
+      this._audioBufferSource = undefined;
+    }
+  }
+
+  // set audioContext(value) {
+  //   //console.log(`${this.id || "(unknown)"}.audioContext (set)`, { value });
+
+  //   const oldValue = this._audioContext;
+  //   const newValue = value || null;
+
+  //   if (oldValue) {
+  //     this._audioSourceNode.disconnect(oldValue.destination);
+  //     this._audioSourceNode = null;
+  //   }
+
+  //   if (newValue) {
+  //     this._audioSourceNode = newValue.createMediaElementSource(this._audioElement);
+  //     this._audioSourceNode.connect(newValue.destination);
+  //   }
+
+  //   this._audioContext = newValue;
+  // }
+
+  _load(url) {
     if (!url) {
       throw new Error("URL required.");
     }
@@ -175,20 +211,6 @@ class AudioVisualization extends HTMLElement {
     // this._audioSourceNode.connect(this._audioContext.destination);
 
     return new Promise((resolve, reject) => {
-      // this.renderingContext.canvas.width = this.element.offsetWidth;
-      // this.renderingContext.canvas.height = this.element.offsetHeight;
-
-      // this.element.handleResize = this.onResize.bind(this);
-
-      // const resizeObserver = new ResizeObserver(entries => {
-      //   for (let entry of entries) {
-      //     if (entry.target.handleResize) {
-      //       entry.target.handleResize();
-      //     }
-      //   }
-      // });
-
-      // resizeObserver.observe(this.element);
 
       const request = new XMLHttpRequest();
 
@@ -213,6 +235,14 @@ class AudioVisualization extends HTMLElement {
             this._gainNode = this._audioContext.createGain();
             this._gainNode.connect(this._analyser);
             this._analyser.connect(this._audioContext.destination);
+
+            this._audioBufferSource = this._audioContext.createBufferSource();
+            this._audioBufferSource.buffer = this._audioBuffer;
+            this._audioBufferSource.loop = true;
+            this._audioBufferSource.connect(this._gainNode);
+      
+            this._startedAt = this._pausedAt ? Date.now() - this._pausedAt : Date.now();
+            this._pausedAt ? this._audioBufferSource.start(0, this._pausedAt / 1000) : this._audioBufferSource.start();
 
             // this.frequencyData = new Uint8Array(this.analyser.frequencyBinCount);
             // this.timeData = new Uint8Array(this.analyser.frequencyBinCount);
@@ -249,26 +279,23 @@ class AudioVisualization extends HTMLElement {
       request.responseType = "arraybuffer";
       request.open("GET", url, true);
       request.send();
-    }).then(
-      // this.onLoadCompleted.bind(this),
-      // this.onLoadFailed.bind(this));
-    );
+    }).then(this.onLoadCompleted.bind(this), this.onLoadFailed.bind(this));
   }
 
-  onLoading(step) {
+  _onLoading(step) {
     // const loadingElement = this.element.querySelector(".loading");
     // loadingElement.innerHTML = `<h1>Loading&hellip;</h1><p>&ndash; ${step} &ndash;</p>`;
     // loadingElement.classList.remove("hidden");
   }
 
-  onLoadCompleted() {
+  _onLoadCompleted() {
     // const loadingElement = this.element.querySelector(".loading");
     // loadingElement.classList.add("hidden");
 
-    this.play();
+    // this.play();
   }
 
-  onLoadFailed(error) {
+  _onLoadFailed(error) {
     console.error(error);
 
     // const loadingElement = this.element.querySelector(".loading");
@@ -285,60 +312,6 @@ class AudioVisualization extends HTMLElement {
 
     // errorElement.classList.remove("hidden");
   }
-
-  play() {
-    this.paused = false;
-
-    if (!this._audioContext) {
-      this.load("/content/audio/new_year_dubstep_minimix.ogg");
-    } else {
-      this._audioBufferSource = this._audioContext.createBufferSource();
-      this._audioBufferSource.buffer = this._audioBuffer;
-      this._audioBufferSource.loop = true;
-      this._audioBufferSource.connect(this._gainNode);
-
-      this._startedAt = this._pausedAt ? Date.now() - this._pausedAt : Date.now();
-      this._pausedAt ? this._audioBufferSource.start(0, this._pausedAt / 1000) : this._audioBufferSource.start();
-    }
-
-    // document.querySelector("a.play").classList.add("hidden");
-    // document.querySelector("a.pause").classList.remove("hidden");
-
-    // this.animate();
-  }
-
-  pause() {
-    this.paused = true;
-
-    if (this._audioBufferSource) {
-      this._audioBufferSource.stop();
-      this._audioBufferSource = undefined;
-    }
-
-    this._pausedAt = Date.now() - this._startedAt;
-
-    // document.querySelector("a.pause").classList.add("hidden");
-    // document.querySelector("a.play").classList.remove("hidden");
-  }
-
-  // set audioContext(value) {
-  //   //console.log(`${this.id || "(unknown)"}.audioContext (set)`, { value });
-
-  //   const oldValue = this._audioContext;
-  //   const newValue = value || null;
-
-  //   if (oldValue) {
-  //     this._audioSourceNode.disconnect(oldValue.destination);
-  //     this._audioSourceNode = null;
-  //   }
-
-  //   if (newValue) {
-  //     this._audioSourceNode = newValue.createMediaElementSource(this._audioElement);
-  //     this._audioSourceNode.connect(newValue.destination);
-  //   }
-
-  //   this._audioContext = newValue;
-  // }
 
   get onpaint() {
     //console.log(`${this.id || "(unknown)"}.onpaint (get)`);

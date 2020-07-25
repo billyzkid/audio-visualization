@@ -70,7 +70,7 @@ function drawStars(width, height, avg) {
       viz1.canvasContext.fillStyle = star.color;
       viz1.canvasContext.globalCompositeOperation = "lighter";
       viz1.canvasContext.beginPath();
-      viz1.canvasContext.arc(star.x + cx, star.y + cy, star.radius, Constants.PI_TWO, false);
+      viz1.canvasContext.arc(star.x + cx, star.y + cy, star.radius, Math.PI * 2, false);
       viz1.canvasContext.fill();
       viz1.canvasContext.closePath();
     }
@@ -87,7 +87,7 @@ function drawCircle(width, height, avg) {
 
   if (!circle_points.length) {
     for (var i = 0; i < Constants.TOTAL_CIRCLE_POINTS; i++) {
-      const angle = (i * 360) / Constants.TOTAL_CIRCLE_POINTS;
+      const angle = Math.PI / 180 * (i * 360) / Constants.TOTAL_CIRCLE_POINTS;
       const randomValue = Math.random() * 256;
       circle_points.push(new Point(width, height, angle, randomValue));
     }
@@ -98,8 +98,7 @@ function drawCircle(width, height, avg) {
     rotation += -Constants.CIRCLE_TICK;
     viz1.canvasContext.strokeStyle = Constants.CIRCLE_LINE_COLOR_2;
     viz1.canvasContext.fillStyle = Constants.CIRCLE_COLOR_2;
-  }
-  else {
+  } else {
     rotation += Constants.CIRCLE_TICK;
     viz1.canvasContext.strokeStyle = Constants.CIRCLE_LINE_COLOR_1;
     viz1.canvasContext.fillStyle = Constants.CIRCLE_COLOR_1;
@@ -117,8 +116,8 @@ function drawCircle(width, height, avg) {
 
   for (var i = 0; i < circle_points.length - 1; i++) {
     p = circle_points[i];
-    p.dx = p.x + avgValue * Math.sin(Constants.PI_HALF * p.angle);
-    p.dy = p.y + avgValue * Math.cos(Constants.PI_HALF * p.angle);
+    p.dx = p.x + avgValue * Math.sin(p.angle);
+    p.dy = p.y + avgValue * Math.cos(p.angle);
 
     xc = (p.dx + circle_points[i + 1].dx) / 2;
     yc = (p.dy + circle_points[i + 1].dy) / 2;
@@ -127,8 +126,8 @@ function drawCircle(width, height, avg) {
   }
 
   p = circle_points[i];
-  p.dx = p.x + avgValue * Math.sin(Constants.PI_HALF * p.angle);
-  p.dy = p.y + avgValue * Math.cos(Constants.PI_HALF * p.angle);
+  p.dx = p.x + avgValue * Math.sin(p.angle);
+  p.dy = p.y + avgValue * Math.cos(p.angle);
 
   xc = (p.dx + circle_points[0].dx) / 2;
   yc = (p.dy + circle_points[0].dy) / 2;
@@ -151,7 +150,7 @@ function drawWave(width, height, avg) {
 
   if (!wave_points.length) {
     for (var i = 0; i < Constants.TOTAL_WAVE_POINTS; i++) {
-      const angle = (i * 360) / Constants.TOTAL_WAVE_POINTS;
+      const angle = Math.PI / 180 * (i * 360) / Constants.TOTAL_WAVE_POINTS;
       const randomValue = Math.random() * 256;
       wave_points.push(new Point(width, height, angle, randomValue));
     }
@@ -161,8 +160,7 @@ function drawWave(width, height, avg) {
     rotation += Constants.WAVE_TICK;
     viz1.canvasContext.strokeStyle = Constants.WAVE_LINE_COLOR_2;
     viz1.canvasContext.fillStyle = Constants.WAVE_COLOR_2;
-  }
-  else {
+  } else {
     rotation += -Constants.WAVE_TICK;
     viz1.canvasContext.strokeStyle = Constants.WAVE_LINE_COLOR_1;
     viz1.canvasContext.fillStyle = Constants.WAVE_COLOR_1;
@@ -180,8 +178,8 @@ function drawWave(width, height, avg) {
 
   for (var i = 0; i < wave_points.length - 1; i++) {
     p = wave_points[i];
-    p.dx = p.x + viz1.timeData[i] * Math.sin(Constants.PI_HALF * p.angle);
-    p.dy = p.y + viz1.timeData[i] * Math.cos(Constants.PI_HALF * p.angle);
+    p.dx = p.x + viz1.timeData[i] * Math.sin(p.angle);
+    p.dy = p.y + viz1.timeData[i] * Math.cos(p.angle);
 
     xc = (p.dx + wave_points[i + 1].dx) / 2;
     yc = (p.dy + wave_points[i + 1].dy) / 2;
@@ -190,8 +188,8 @@ function drawWave(width, height, avg) {
   }
 
   p = wave_points[i];
-  p.dx = p.x + viz1.timeData[i] * Math.sin(Constants.PI_HALF * p.angle);
-  p.dy = p.y + viz1.timeData[i] * Math.cos(Constants.PI_HALF * p.angle);
+  p.dx = p.x + viz1.timeData[i] * Math.sin(p.angle);
+  p.dy = p.y + viz1.timeData[i] * Math.cos(p.angle);
 
   xc = (p.dx + wave_points[0].dx) / 2;
   yc = (p.dy + wave_points[0].dy) / 2;

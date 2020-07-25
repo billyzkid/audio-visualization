@@ -4,10 +4,10 @@ class Point {
   constructor(width, height, angle, randomValue) {
     this.angle = angle;
     this.radius = Math.abs(width, height) / 10;
-    this.x = (width / 2) + this.radius * Math.sin(Constants.PI_HALF * angle);
-    this.y = (height / 2) + this.radius * Math.cos(Constants.PI_HALF * angle);
-    this.dx = this.x + randomValue * Math.sin(Constants.PI_HALF * angle);
-    this.dy = this.y + randomValue * Math.cos(Constants.PI_HALF * angle);
+    this.x = (width / 2) + this.radius * Math.sin(angle);
+    this.y = (height / 2) + this.radius * Math.cos(angle);
+    this.dx = this.x + randomValue * Math.sin(angle);
+    this.dy = this.y + randomValue * Math.cos(angle);
   }
 }
 

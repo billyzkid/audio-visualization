@@ -1,6 +1,3 @@
-export const PI_TWO = Math.PI * 2;
-export const PI_HALF = Math.PI / 180;
-
 export const FFT_SIZE = 1024;
 export const MIN_DECIBELS = -100;
 export const MAX_DECIBELS = -30;

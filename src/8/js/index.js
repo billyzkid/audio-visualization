@@ -5,9 +5,9 @@ import Point from "./Point.js";
 
 customElements.define("audio-visualization", AudioVisualization);
 
-const viz1 = document.getElementById("viz1");
+document.getElementById("viz1").addEventListener("paint", onPaint);
 
-viz1.addEventListener("paint", (e) => {
+function onPaint(e) {
   const visualization = e.target;
   const canvas = visualization.canvasContext.canvas;
   const width = canvas.width = canvas.offsetWidth;
@@ -25,7 +25,7 @@ viz1.addEventListener("paint", (e) => {
     drawCircle(visualization, width, height, avg);
     drawWave(visualization, width, height, avg);
   }
-});
+}
 
 function clearCanvas(visualization, width, height) {
   const gradient = visualization.canvasContext.createLinearGradient(0, 0, 0, height);

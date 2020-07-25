@@ -1,9 +1,7 @@
 import * as Constants from "./Constants.js";
 
 class Point {
-  constructor(width, height, angle) {
-    const randomValue = Math.random() * Constants.RANDOM_POINT_VALUE;
-
+  constructor(width, height, angle, randomValue) {
     this.angle = angle;
     this.radius = Math.abs(width, height) / 10;
     this.x = (width / 2) + this.radius * Math.sin(Constants.PI_HALF * angle);

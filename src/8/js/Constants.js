@@ -10,7 +10,6 @@ export const TOTAL_STARS = 1500;
 export const TOTAL_CIRCLE_POINTS = 64;
 export const TOTAL_WAVE_POINTS = 512;
 
-export const RANDOM_POINT_VALUE = 256;
 export const STARS_BREAK_POINT = 140;
 export const CIRCLE_BREAK_POINT = 100;
 export const WAVE_BREAK_POINT = 100;

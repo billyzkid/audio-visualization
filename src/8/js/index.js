@@ -7,15 +7,13 @@ customElements.define("audio-visualization", AudioVisualization);
 
 const viz1 = document.getElementById("viz1");
 const stars = [];
-const points = [];
-const avg_points = [];
+const circle_points = [];
+const wave_points = [];
 
 viz1.addEventListener("paint", () => {
-  const width = viz1.canvasContext.canvas.offsetWidth;
-  const height = viz1.canvasContext.canvas.offsetHeight;
-
-  viz1.canvasContext.canvas.width = width;
-  viz1.canvasContext.canvas.height = height;
+  const canvas = viz1.canvasContext.canvas;
+  const width = canvas.width = canvas.offsetWidth;
+  const height = canvas.height = canvas.offsetHeight;
 
   clearCanvas(width, height);
 
@@ -27,7 +25,7 @@ viz1.addEventListener("paint", () => {
     
     drawStars(width, height, avg);
     drawCircle(width, height, avg);
-    drawWaves(width, height, avg);
+    drawWave(width, height, avg);
   }
 });
 
@@ -88,23 +86,23 @@ function drawCircle(width, height, avg) {
   var rotation = 0;
   var p, xc, yc;
 
-  if (!avg_points.length) {
-    for (var i = 0; i < Constants.TOTAL_AVG_POINTS; i++) {
-      const angle = (i * 360) / Constants.TOTAL_AVG_POINTS;
-      avg_points.push(new Point(width, height, angle));
+  if (!circle_points.length) {
+    for (var i = 0; i < Constants.TOTAL_CIRCLE_POINTS; i++) {
+      const angle = (i * 360) / Constants.TOTAL_CIRCLE_POINTS;
+      circle_points.push(new Point(width, height, angle));
     }
   }
 
-  if (avg > Constants.AVG_BREAK_POINT) {
+  if (avg > Constants.CIRCLE_BREAK_POINT) {
     randomValue += Math.random() * 10;
-    rotation += -Constants.BUBBLE_AVG_TICK;
-    viz1.canvasContext.strokeStyle = Constants.BUBBLE_AVG_LINE_COLOR_2;
-    viz1.canvasContext.fillStyle = Constants.BUBBLE_AVG_COLOR_2;
+    rotation += -Constants.CIRCLE_TICK;
+    viz1.canvasContext.strokeStyle = Constants.CIRCLE_LINE_COLOR_2;
+    viz1.canvasContext.fillStyle = Constants.CIRCLE_COLOR_2;
   }
   else {
-    rotation += Constants.BUBBLE_AVG_TICK;
-    viz1.canvasContext.strokeStyle = Constants.BUBBLE_AVG_LINE_COLOR_1;
-    viz1.canvasContext.fillStyle = Constants.BUBBLE_AVG_COLOR_1;
+    rotation += Constants.CIRCLE_TICK;
+    viz1.canvasContext.strokeStyle = Constants.CIRCLE_LINE_COLOR_1;
+    viz1.canvasContext.fillStyle = Constants.CIRCLE_COLOR_1;
   }
 
   viz1.canvasContext.beginPath();
@@ -115,28 +113,28 @@ function drawCircle(width, height, avg) {
   viz1.canvasContext.translate(cx, cy);
   viz1.canvasContext.rotate(rotation);
   viz1.canvasContext.translate(-cx, -cy);
-  viz1.canvasContext.moveTo(avg_points[0].dx, avg_points[0].dy);
+  viz1.canvasContext.moveTo(circle_points[0].dx, circle_points[0].dy);
 
-  for (var i = 0; i < avg_points.length - 1; i++) {
-    p = avg_points[i];
+  for (var i = 0; i < circle_points.length - 1; i++) {
+    p = circle_points[i];
     p.dx = p.x + randomValue * Math.sin(Constants.PI_HALF * p.angle);
     p.dy = p.y + randomValue * Math.cos(Constants.PI_HALF * p.angle);
 
-    xc = (p.dx + avg_points[i + 1].dx) / 2;
-    yc = (p.dy + avg_points[i + 1].dy) / 2;
+    xc = (p.dx + circle_points[i + 1].dx) / 2;
+    yc = (p.dy + circle_points[i + 1].dy) / 2;
 
     viz1.canvasContext.quadraticCurveTo(p.dx, p.dy, xc, yc);
   }
 
-  p = avg_points[i];
+  p = circle_points[i];
   p.dx = p.x + randomValue * Math.sin(Constants.PI_HALF * p.angle);
   p.dy = p.y + randomValue * Math.cos(Constants.PI_HALF * p.angle);
 
-  xc = (p.dx + avg_points[0].dx) / 2;
-  yc = (p.dy + avg_points[0].dy) / 2;
+  xc = (p.dx + circle_points[0].dx) / 2;
+  yc = (p.dy + circle_points[0].dy) / 2;
 
   viz1.canvasContext.quadraticCurveTo(p.dx, p.dy, xc, yc);
-  viz1.canvasContext.quadraticCurveTo(xc, yc, avg_points[0].dx, avg_points[0].dy);
+  viz1.canvasContext.quadraticCurveTo(xc, yc, circle_points[0].dx, circle_points[0].dy);
 
   viz1.canvasContext.stroke();
   viz1.canvasContext.fill();
@@ -144,29 +142,29 @@ function drawCircle(width, height, avg) {
   viz1.canvasContext.closePath();
 }
 
-function drawWaves(width, height, avg) {
+function drawWave(width, height, avg) {
   const cx = width / 2;
   const cy = height / 2;
 
   var rotation = 0;
   var p, xc, yc;
 
-  if (!points.length) {
-    for (var i = 0; i < Constants.TOTAL_POINTS; i++) {
-      const angle = (i * 360) / Constants.TOTAL_POINTS;
-      points.push(new Point(width, height, angle));
+  if (!wave_points.length) {
+    for (var i = 0; i < Constants.TOTAL_WAVE_POINTS; i++) {
+      const angle = (i * 360) / Constants.TOTAL_WAVE_POINTS;
+      wave_points.push(new Point(width, height, angle));
     }
   }
 
-  if (avg > Constants.AVG_BREAK_POINT) {
-    rotation += Constants.WAVEFORM_TICK;
-    viz1.canvasContext.strokeStyle = Constants.WAVEFORM_LINE_COLOR_2;
-    viz1.canvasContext.fillStyle = Constants.WAVEFORM_COLOR_2;
+  if (avg > Constants.WAVE_BREAK_POINT) {
+    rotation += Constants.WAVE_TICK;
+    viz1.canvasContext.strokeStyle = Constants.WAVE_LINE_COLOR_2;
+    viz1.canvasContext.fillStyle = Constants.WAVE_COLOR_2;
   }
   else {
-    rotation += -Constants.WAVEFORM_TICK;
-    viz1.canvasContext.strokeStyle = Constants.WAVEFORM_LINE_COLOR_1;
-    viz1.canvasContext.fillStyle = Constants.WAVEFORM_COLOR_1;
+    rotation += -Constants.WAVE_TICK;
+    viz1.canvasContext.strokeStyle = Constants.WAVE_LINE_COLOR_1;
+    viz1.canvasContext.fillStyle = Constants.WAVE_COLOR_1;
   }
 
   viz1.canvasContext.beginPath();
@@ -177,28 +175,28 @@ function drawWaves(width, height, avg) {
   viz1.canvasContext.translate(cx, cy);
   viz1.canvasContext.rotate(rotation);
   viz1.canvasContext.translate(-cx, -cy);
-  viz1.canvasContext.moveTo(points[0].dx, points[0].dy);
+  viz1.canvasContext.moveTo(wave_points[0].dx, wave_points[0].dy);
 
-  for (var i = 0; i < points.length - 1; i++) {
-    p = points[i];
+  for (var i = 0; i < wave_points.length - 1; i++) {
+    p = wave_points[i];
     p.dx = p.x + viz1.timeData[i] * Math.sin(Constants.PI_HALF * p.angle);
     p.dy = p.y + viz1.timeData[i] * Math.cos(Constants.PI_HALF * p.angle);
 
-    xc = (p.dx + points[i + 1].dx) / 2;
-    yc = (p.dy + points[i + 1].dy) / 2;
+    xc = (p.dx + wave_points[i + 1].dx) / 2;
+    yc = (p.dy + wave_points[i + 1].dy) / 2;
 
     viz1.canvasContext.quadraticCurveTo(p.dx, p.dy, xc, yc);
   }
 
-  p = points[i];
+  p = wave_points[i];
   p.dx = p.x + viz1.timeData[i] * Math.sin(Constants.PI_HALF * p.angle);
   p.dy = p.y + viz1.timeData[i] * Math.cos(Constants.PI_HALF * p.angle);
 
-  xc = (p.dx + points[0].dx) / 2;
-  yc = (p.dy + points[0].dy) / 2;
+  xc = (p.dx + wave_points[0].dx) / 2;
+  yc = (p.dy + wave_points[0].dy) / 2;
 
   viz1.canvasContext.quadraticCurveTo(p.dx, p.dy, xc, yc);
-  viz1.canvasContext.quadraticCurveTo(xc, yc, points[0].dx, points[0].dy);
+  viz1.canvasContext.quadraticCurveTo(xc, yc, wave_points[0].dx, wave_points[0].dy);
 
   viz1.canvasContext.stroke();
   viz1.canvasContext.fill();

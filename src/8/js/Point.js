@@ -4,6 +4,7 @@ class Point {
   constructor(width, height, angle) {
     const randomValue = Math.random() * Constants.RANDOM_POINT_VALUE;
 
+    this.angle = angle;
     this.radius = Math.abs(width, height) / 10;
     this.x = (width / 2) + this.radius * Math.sin(Constants.PI_HALF * angle);
     this.y = (height / 2) + this.radius * Math.cos(Constants.PI_HALF * angle);

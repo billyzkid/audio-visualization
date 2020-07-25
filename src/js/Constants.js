@@ -1,11 +1,11 @@
-export const FFT_SIZE = 1024;
+export const FFT_SIZE = 2048;
 export const MIN_DECIBELS = -100;
 export const MAX_DECIBELS = -30;
 export const SMOOTHING_TIME = 0.8;
 
-export const TOTAL_STARS = 1500;
-export const TOTAL_CIRCLE_POINTS = 64;
-export const TOTAL_WAVE_POINTS = 512;
+export const TOTAL_STARS = 2048;
+export const TOTAL_CIRCLE_POINTS = 256;
+export const TOTAL_WAVE_POINTS = FFT_SIZE / 2;
 
 export const STARS_BREAK_POINT = 140;
 export const CIRCLE_BREAK_POINT = 100;

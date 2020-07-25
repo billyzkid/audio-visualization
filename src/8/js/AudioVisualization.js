@@ -30,11 +30,11 @@ template.innerHTML = `
 
     #loading-container {
       position: absolute;
-      top: 50%;
+      bottom: 0%;
       left: 50%;
-      transform: translate(-50%, -50%);
+      margin-bottom: 10px;
+      transform: translate(-50%, 0%);
       transition: all 400ms;
-      margin-top: -75px;
     }
 
     #loading-container>h1 {
@@ -103,7 +103,7 @@ template.innerHTML = `
     
     #play-pause-svg { 
       fill: #fff;
-      width: 100px;
+      width: 10%;
       transition: opacity 0.6s ease 0.4s;
     }
     

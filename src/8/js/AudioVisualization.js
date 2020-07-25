@@ -333,15 +333,11 @@ class AudioVisualization extends HTMLElement {
   }
 
   _onLoading(message) {
-    console.log("Loading...", message);
-
     this._loadingContainer.innerHTML = `<h1>Loading&hellip;</h1><p>&ndash; ${message} &ndash;</p>`;
     this._loadingContainer.classList.remove("hidden");
   }
 
   _onLoaded() {
-    console.log("Loaded!");
-
     this._loadingContainer.classList.add("hidden");
     this._errorContainer.classList.add("hidden");
   }

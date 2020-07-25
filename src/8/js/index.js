@@ -22,7 +22,7 @@ viz1.addEventListener("paint", () => {
     viz1.analyser.getByteTimeDomainData(viz1.timeData);
 
     const avg = viz1.frequencyData.reduce((a, b) => a + b) / viz1.frequencyData.length * viz1.gainNode.gain.value;
-    
+
     drawStars(width, height, avg);
     drawCircle(width, height, avg);
     drawWave(width, height, avg);

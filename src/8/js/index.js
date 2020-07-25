@@ -87,7 +87,7 @@ function drawCircle(width, height, avg) {
 
   if (!circle_points.length) {
     for (var i = 0; i < Constants.TOTAL_CIRCLE_POINTS; i++) {
-      const angle = Math.PI / 180 * (i * 360) / Constants.TOTAL_CIRCLE_POINTS;
+      const angle = Math.PI * 2 * i / Constants.TOTAL_CIRCLE_POINTS;
       const randomValue = Math.random() * 256;
       circle_points.push(new Point(width, height, angle, randomValue));
     }
@@ -150,7 +150,7 @@ function drawWave(width, height, avg) {
 
   if (!wave_points.length) {
     for (var i = 0; i < Constants.TOTAL_WAVE_POINTS; i++) {
-      const angle = Math.PI / 180 * (i * 360) / Constants.TOTAL_WAVE_POINTS;
+      const angle = Math.PI * 2 * i / Constants.TOTAL_WAVE_POINTS;
       const randomValue = Math.random() * 256;
       wave_points.push(new Point(width, height, angle, randomValue));
     }
